@@ -1278,7 +1278,8 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
       },
       {
         "tag": "dns-local",
-        "address": "195.208.4.1"
+        "address": "195.208.4.1",
+        "strategy": "ipv4_only"
       },
       {
         "tag": "dns-block",
