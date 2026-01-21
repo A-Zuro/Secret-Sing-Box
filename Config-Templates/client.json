@@ -89,13 +89,11 @@
           "kaspersky",
           "stepik",
           "likee",
-          "snapchat",
           "yappy",
           "pikabu",
           "okko",
           "wink",
           "kion",
-          "roblox",
           "wildberries",
           "aliexpress"
         ],
@@ -158,7 +156,10 @@
       "tag": "tun-in",
       "interface_name": "tun0",
       "stack": "system",
-      "address": "172.19.0.1/28",
+      "address": [
+        "172.19.0.1/28",
+        "fdfe:dcba:9876::1/126"
+      ],
       "auto_route": true,
       "strict_route": true,
       "sniff_override_destination": true
@@ -183,17 +184,18 @@
           "fingerprint": "randomized"
         }
       },
-      "multiplex": {
-        "enabled": true,
-        "padding": true
-      },
       "transport": {
         "type": "ws",
         "path": "/TROJAN-PATH"
+      },
+      "multiplex": {
+        "enabled": true,
+        "padding": true
       }
     }
   ],
   "route": {
+    "auto_detect_interface": true,
     "rules": [
       {
         "action": "sniff"
@@ -275,13 +277,11 @@
           "kaspersky",
           "stepik",
           "likee",
-          "snapchat",
           "yappy",
           "pikabu",
           "okko",
           "wink",
           "kion",
-          "roblox",
           "wildberries",
           "aliexpress"
         ],
@@ -620,8 +620,7 @@
         "format": "binary",
         "url": "https://DOMAIN/RULESETPATH/geosite-category-ads-all.srs"
       }
-    ],
-    "auto_detect_interface": true
+    ]
   },
   "experimental": {
     "cache_file": {

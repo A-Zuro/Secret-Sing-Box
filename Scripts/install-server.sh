@@ -6,10 +6,10 @@ red='\033[1;31m'
 clear='\033[0m'
 
 check_os() {
-    if ! grep -q -e "bullseye" -e "bookworm" -e "jammy" -e "noble" /etc/os-release
+    if ! grep -q -e "bullseye" -e "bookworm" -e "trixie" -e "jammy" -e "noble" /etc/os-release
     then
         echo ""
-        echo -e "${red}Error: only Debian 11/12 and Ubuntu 22.04/24.04 are supported${clear}"
+        echo -e "${red}Error: only Debian 11/12/13 and Ubuntu 22.04/24.04 are supported${clear}"
         echo ""
         exit 1
     fi
@@ -26,46 +26,13 @@ check_root() {
 }
 
 check_sbmanager() {
-    if [ -f /usr/local/bin/sbmanager ]
+    if [[ -f /usr/local/bin/sbmanager ]]
     then
         echo ""
         echo -e "${red}Error: the script has already been run, no need to run it again${clear}"
         echo ""
         exit 1
     fi
-}
-
-check_if_updated() {
-    if [[ "${language}" == "1" ]]
-    then
-        echo ""
-        echo -e "${textcolor}[?]${clear} Вы точно обновили систему и перезагрузили сервер перед запуском скрипта?"
-        echo "1 - Обновить и перезагрузить"
-        echo "2 - Продолжить (система была обновлена и перезагружена)"
-        read systemupdated
-    else
-        echo ""
-        echo -e "${textcolor}[?]${clear} Are you sure you have updated the system and rebooted the server before running the script?"
-        echo "1 - Update and reboot"
-        echo "2 - Continue (the system has been updated and rebooted)"
-        read systemupdated
-    fi
-
-    if [[ "${systemupdated}" == "1" ]]
-    then
-        echo ""
-        apt update -y && apt full-upgrade -y
-        sleep 1.5
-        echo ""
-        reboot
-        exit 0
-    fi
-}
-
-get_ip() {
-    serverip=$(curl -s -4 https://cloudflare.com/cdn-cgi/trace | grep "ip" | cut -d "=" -f 2)
-    [[ ! $serverip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] && serverip=$(curl -s ipinfo.io/ip)
-    [[ ! $serverip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] && serverip=$(curl -s 2ip.io)
 }
 
 banner() {
@@ -82,44 +49,81 @@ banner() {
     echo "╚══╗ ║ ║ ║ ║ ║ ═╗ ══ ╠══╣ ║  ║  ╔╬╝ "
     echo "   ║ ║ ║ ╚╗║ ║  ║    ║  ║ ║  ║ ╔╝╚╗ "
     echo "╚══╝ ╩ ╩  ╚╩ ╚══╝    ╩══╝ ╚══╝ ╝  ╚═"
+    echo ""
+    echo ""
 }
 
 enter_language() {
-    echo ""
-    echo ""
     echo -e "${textcolor}Select the language:${clear}"
     echo "1 - Russian"
     echo "2 - English"
-    read language
+    read -r language
+    [[ -n $language ]] && echo ""
     echo ""
+
+    if [[ "$language" == "1" ]]
+    then
+        language="ru"
+    else
+        language="en"
+    fi
+}
+
+start_text_ru() {
+    echo -e "${red}ВНИМАНИЕ!${clear}"
+    echo "Запускайте скрипт на чистой системе"
+    echo ""
+    echo "Перед запуском скрипта нужно выполнить следующие действия:"
+    echo -e "1) Обновить систему на сервере командой ${textcolor}apt update -y && apt full-upgrade -y${clear}"
+    echo -e "2) Перезагрузить сервер командой ${textcolor}reboot${clear}"
+    echo ""
+    echo -e "Если это сделано, то нажмите ${textcolor}Enter${clear}, чтобы продолжить"
+    echo -e "В противном случае нажмите ${textcolor}Ctrl + C${clear} для завершения работы скрипта"
+    read -r big_red_button
+    [[ -n $big_red_button ]] && echo ""
     echo ""
 }
 
-start_message() {
-    if [[ "${language}" == "1" ]]
+start_text_en() {
+    echo -e "${red}ATTENTION!${clear}"
+    echo "Run the script on a newly installed system"
+    echo ""
+    echo "Before running the script, it's necessary to do the following:"
+    echo -e "1) Update the system on the server (${textcolor}apt update -y && apt full-upgrade -y${clear})"
+    echo -e "2) Reboot the server (${textcolor}reboot${clear})"
+    echo ""
+    echo -e "If it's done, then press ${textcolor}Enter${clear} to continue"
+    echo -e "If not, then press ${textcolor}Ctrl + C${clear} to exit the script"
+    read -r big_red_button
+    [[ -n $big_red_button ]] && echo ""
+    echo ""
+}
+
+update_and_reboot() {
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor}Обновление системы завершено${clear}"
+    info_message[2_ru]="${textcolor}Через минуту снова подключитесь к серверу по SSH и ещё раз запустите скрипт${clear}"
+    info_message[1_en]="${textcolor}The system update is complete${clear}"
+    info_message[2_en]="${textcolor}In a minute, reconnect to the server via SSH and run the script again${clear}"
+
+    if [[ "$system_updated" == "1" ]]
     then
-        echo -e "${red}ВНИМАНИЕ!${clear}"
-        echo "Запускайте скрипт на чистой системе"
+        apt update -y && apt full-upgrade -y
+        sleep 1.5
         echo ""
-        echo "Перед запуском скрипта нужно выполнить следующие действия:"
-        echo -e "1) Обновить систему на сервере командой ${textcolor}apt update -y && apt full-upgrade -y${clear}"
-        echo -e "2) Перезагрузить сервер командой ${textcolor}reboot${clear}"
+        echo -e "${info_message[1_$language]}"
+        echo -e "${info_message[2_$language]}"
         echo ""
-        echo -e "Если это сделано, то нажмите ${textcolor}Enter${clear}, чтобы продолжить"
-        echo -e "В противном случае нажмите ${textcolor}Ctrl + C${clear} для завершения работы скрипта"
-        read BigRedButton
-    else
-        echo -e "${red}ATTENTION!${clear}"
-        echo "Run the script on a newly installed system"
-        echo ""
-        echo "Before running the script, it's necessary to do the following:"
-        echo -e "1) Update the system on the server (${textcolor}apt update -y && apt full-upgrade -y${clear})"
-        echo -e "2) Reboot the server (${textcolor}reboot${clear})"
-        echo ""
-        echo -e "If it's done, then press ${textcolor}Enter${clear} to continue"
-        echo -e "If not, then press ${textcolor}Ctrl + C${clear} to exit the script"
-        read BigRedButton
+        reboot
+        exit 0
     fi
+}
+
+get_ip() {
+    grep -q '^precedence \+::ffff:0:0/96 ' /etc/gai.conf &> /dev/null || echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf
+    server_ip=$(curl -s https://cloudflare.com/cdn-cgi/trace | grep "ip" | cut -d "=" -f 2)
+    [[ ! $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] && server_ip=$(curl -s ipinfo.io/ip)
+    [[ ! $server_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] && server_ip=$(curl -s 2ip.io)
 }
 
 crop_domain() {
@@ -134,524 +138,399 @@ crop_redirect_domain() {
     redirect=$(echo "${redirect}" | cut -d "/" -f 1)
 }
 
-edit_index() {
-    [[ "$index" != "/"* ]] && index="/${index}"
-    index=${index%"/"}
-}
-
-check_ssh_port_ru() {
-    while [[ ! $sshp =~ ^[0-9]+$ ]] || [ $sshp -eq 80 ] || [ $sshp -eq 443 ] || [ $sshp -eq 10443 ] || [ $sshp -eq 11443 ] || [ $sshp -eq 40000 ] || [ $sshp -gt 65535 ]
-    do
-        if [[ ! $sshp =~ ^[0-9]+$ ]]
-        then
-            echo -e "${red}Ошибка: введённое значение не является числом${clear}"
-        elif [ $sshp -eq 80 ] || [ $sshp -eq 443 ] || [ $sshp -eq 10443 ] || [ $sshp -eq 11443 ] || [ $sshp -eq 40000 ]
-        then
-            echo -e "${red}Ошибка: порты 80, 443, 10443, 11443 и 40000 будут заняты${clear}"
-        elif [ $sshp -gt 65535 ]
-        then
-            echo -e "${red}Ошибка: номер порта не может быть больше 65535${clear}"
-        fi
-        echo ""
-        echo -e "${textcolor}[?]${clear} Введите новый номер порта SSH или 22 (рекомендуется номер более 1024):"
-        read sshp
-        echo ""
-    done
-}
-
-check_ssh_port_en() {
-    while [[ ! $sshp =~ ^[0-9]+$ ]] || [ $sshp -eq 80 ] || [ $sshp -eq 443 ] || [ $sshp -eq 10443 ] || [ $sshp -eq 11443 ] || [ $sshp -eq 40000 ] || [ $sshp -gt 65535 ]
-    do
-        if [[ ! $sshp =~ ^[0-9]+$ ]]
-        then
-            echo -e "${red}Error: this is not a number${clear}"
-        elif [ $sshp -eq 80 ] || [ $sshp -eq 443 ] || [ $sshp -eq 10443 ] || [ $sshp -eq 11443 ] || [ $sshp -eq 40000 ]
-        then
-            echo -e "${red}Error: ports 80, 443, 10443, 11443 and 40000 will be taken${clear}"
-        elif [ $sshp -gt 65535 ]
-        then
-            echo -e "${red}Error: port number can't be greater than 65535${clear}"
-        fi
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter new SSH port number or 22 (number above 1024 is recommended):"
-        read sshp
-        echo ""
-    done
-}
-
-check_username_ru() {
-    while [[ ! $username =~ ^[a-z][-a-z0-9_]*\$?$ ]] || [[ -z $username ]]
-    do
-        if [[ -z $username ]]
-        then
-            :
-        elif [[ ! $username =~ ^[a-z][-a-z0-9_]*\$?$ ]]
-        then
-            echo -e "${red}Ошибка: имя пользователя должно содержать только английские строчные буквы, цифры, символы _ и -, а также начинаться со строчной буквы${clear}"
-            echo ""
-        fi
-        echo -e "${textcolor}[?]${clear} Введите имя нового пользователя или root (рекомендуется не root):"
-        read username
-        echo ""
-    done
-}
-
-check_username_en() {
-    while [[ ! $username =~ ^[a-z][-a-z0-9_]*\$?$ ]] || [[ -z $username ]]
-    do
-        if [[ -z $username ]]
-        then
-            :
-        elif [[ ! $username =~ ^[a-z][-a-z0-9_]*\$?$ ]]
-        then
-            echo -e "${red}Error: the username should contain only lowercase letters, numbers, _ and - symbols, and must start with a lowercase letter${clear}"
-            echo ""
-        fi
-        echo -e "${textcolor}[?]${clear} Enter your username or root (non-root user is recommended):"
-        read username
-        echo ""
-    done
-}
-
-check_password_ru() {
-    while [[ $password =~ " " ]] || [[ -z $password ]]
-    do
-        if [[ $password =~ " " ]]
-        then
-            echo -e "${red}Ошибка: пароль не должен содержать пробелы${clear}"
-            echo ""
-        elif [[ -z $password ]]
-        then
-            :
-        fi
-        echo -e "${textcolor}[?]${clear} Введите пароль SSH для пользователя (рекомендуется сложный пароль):"
-        read password
-        echo ""
-    done
-}
-
-check_password_en() {
-    while [[ $password =~ " " ]] || [[ -z $password ]]
-    do
-        if [[ $password =~ " " ]]
-        then
-            echo -e "${red}Error: the password should not contain spaces${clear}"
-            echo ""
-        elif [[ -z $password ]]
-        then
-            :
-        fi
-        echo -e "${textcolor}[?]${clear} Enter new SSH password (a complex password is recommended):"
-        read password
-        echo ""
-    done
+edit_index_path() {
+    [[ "$index_path" != "/"* ]] && index_path="/${index_path}"
+    index_path=${index_path%"/"}
 }
 
 get_test_response() {
-    testdomain=$(echo "${domain}" | rev | cut -d '.' -f 1-2 | rev)
+    test_domain=$(echo "${domain}" | rev | cut -d "." -f 1-2 | rev)
 
-    if [[ "$cftoken" =~ [A-Z] ]]
+    if [[ $cf_token =~ [A-Z] ]]
     then
-        test_response=$(curl --silent --request GET --url https://api.cloudflare.com/client/v4/zones --header "Authorization: Bearer ${cftoken}" --header "Content-Type: application/json")
+        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "Authorization: Bearer ${cf_token}" --header "Content-Type: application/json")
     else
-        test_response=$(curl --silent --request GET --url https://api.cloudflare.com/client/v4/zones --header "X-Auth-Key: ${cftoken}" --header "X-Auth-Email: ${email}" --header "Content-Type: application/json")
+        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "X-Auth-Key: ${cf_token}" --header "X-Auth-Email: ${email}" --header "Content-Type: application/json")
     fi
 }
 
-check_cf_token_ru() {
-    echo "Проверка домена, API токена/ключа и почты..."
+check_cf_token() {
+    declare -A -g check_message=()
+    check_message[1_ru]="Проверка домена, API токена/ключа и почты..."
+    check_message[2_ru]="${red}Ошибка: неправильно введён домен, API токен/ключ или почта${clear}"
+    check_message[3_ru]="${red}Инструкция: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-ru.md#получение-api-токена-cloudflare${clear}"
+    check_message[4_ru]="Успешно!"
+    check_message[1_en]="Checking domain name, API token/key and email..."
+    check_message[2_en]="${red}Error: invalid domain name, API token/key or email${clear}"
+    check_message[3_en]="${red}Instruction: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-en.md#getting-cloudflare-api-token${clear}"
+    check_message[4_en]="Success!"
+
+    echo "${check_message[1_$language]}"
     get_test_response
 
-    while [[ "$domain" =~ ".." ]] || [[ -z $(echo $test_response | grep "\"${testdomain}\"") ]] || [[ -z $(echo $test_response | grep "\"#dns_records:edit\"") ]] || [[ -z $(echo $test_response | grep "\"#dns_records:read\"") ]] || [[ -z $(echo $test_response | grep "\"#zone:read\"") ]]
+    while [[ $domain =~ ".." ]] || [[ ! $test_response =~ "\"$test_domain\"" ]] || [[ ! $test_response =~ "#dns_records:edit" ]] || [[ ! $test_response =~ "#dns_records:read" ]] || [[ ! $test_response =~ "#zone:read" ]]
     do
         echo ""
-        echo -e "${red}Ошибка: неправильно введён домен, API токен/ключ или почта${clear}"
-        echo -e "${red}Инструкция: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-ru.md#получение-api-токена-cloudflare${clear}"
-        enter_domain_data_ru
-        echo "Проверка домена, API токена/ключа и почты..."
+        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[3_$language]}"
+        enter_domain_data
+        echo "${check_message[1_$language]}"
         get_test_response
     done
 
-    echo "Успешно!"
+    echo "${check_message[4_$language]}"
     echo ""
 }
 
-check_cf_token_en() {
-    echo "Checking domain name, API token/key and email..."
-    get_test_response
+check_trjpass() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: пароль Trojan не должен содержать кавычки \"${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
+    check_message[1_en]="${red}Error: Trojan password should not contain quotes \"${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter your password for Trojan or leave this empty to generate a random password:"
 
-    while [[ "$domain" =~ ".." ]] || [[ -z $(echo $test_response | grep "\"${testdomain}\"") ]] || [[ -z $(echo $test_response | grep "\"#dns_records:edit\"") ]] || [[ -z $(echo $test_response | grep "\"#dns_records:read\"") ]] || [[ -z $(echo $test_response | grep "\"#zone:read\"") ]]
-    do
-        echo ""
-        echo -e "${red}Error: invalid domain name, API token/key or email${clear}"
-        echo -e "${red}Instruction: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-en.md#getting-cloudflare-api-token${clear}"
-        enter_domain_data_en
-        echo "Checking domain name, API token/key and email..."
-        get_test_response
-    done
-
-    echo "Success!"
-    echo ""
-}
-
-check_trjpass_ru() {
     while [[ $trjpass =~ '"' ]]
     do
-        echo -e "${red}Ошибка: пароль Trojan не должен содержать кавычки \"${clear}"
+        echo -e "${check_message[1_$language]}"
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
-        read trjpass
+        echo -e "${check_message[2_$language]}"
+        read -r trjpass
         [[ -n $trjpass ]] && echo ""
     done
 }
 
-check_trjpass_en() {
-    while [[ $trjpass =~ '"' ]]
-    do
-        echo -e "${red}Error: Trojan password should not contain quotes \"${clear}"
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your password for Trojan or leave this empty to generate a random password:"
-        read trjpass
-        [[ -n $trjpass ]] && echo ""
-    done
-}
+check_uuid() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: введённое значение не является UUID${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
+    check_message[1_en]="${red}Error: this is not an UUID${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter your UUID for VLESS or leave this empty to generate a random UUID:"
 
-check_uuid_ru() {
-    while [[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]] && [ -n "$uuid" ]
+    while [[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]] && [[ -n $uuid ]]
     do
-        echo -e "${red}Ошибка: введённое значение не является UUID${clear}"
+        echo -e "${check_message[1_$language]}"
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
-        read uuid
+        echo -e "${check_message[2_$language]}"
+        read -r uuid
         [[ -n $uuid ]] && echo ""
     done
 }
 
-check_uuid_en() {
-    while [[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]] && [ -n "$uuid" ]
-    do
-        echo -e "${red}Error: this is not an UUID${clear}"
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your UUID for VLESS or leave this empty to generate a random UUID:"
-        read uuid
-        [[ -n $uuid ]] && echo ""
-    done
-}
+check_trojan_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
 
-check_trojan_path_ru() {
-    while [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] && [ -n "$trojanpath" ]
+    while [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $trojanpath ]]
     do
-        echo -e "${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+        echo -e "${check_message[1_$language]}"
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
-        read trojanpath
+        echo -e "${check_message[2_$language]}"
+        read -r trojanpath
         [[ -n $trojanpath ]] && echo ""
         trojanpath=${trojanpath#"/"}
     done
 }
 
-check_trojan_path_en() {
-    while [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] && [ -n "$trojanpath" ]
-    do
-        echo -e "${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
-        read trojanpath
-        [[ -n $trojanpath ]] && echo ""
-        trojanpath=${trojanpath#"/"}
-    done
-}
+check_vless_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan и VLESS должны быть разными${clear}"
+    check_message[3_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan and VLESS must be different${clear}"
+    check_message[3_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
 
-check_vless_path_ru() {
-    while ([ "$trojanpath" = "$vlesspath" ] || [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$vlesspath" ]
+    while ([[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$vlesspath" == "$trojanpath" ]]) && [[ -n $vlesspath ]]
     do
         if [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]
         then
-            echo -e "${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+            echo -e "${check_message[1_$language]}"
         else
-            echo -e "${red}Ошибка: пути для Trojan и VLESS не должны совпадать${clear}"
+            echo -e "${check_message[2_$language]}"
         fi
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
-        read vlesspath
+        echo -e "${check_message[3_$language]}"
+        read -r vlesspath
         [[ -n $vlesspath ]] && echo ""
         vlesspath=${vlesspath#"/"}
     done
 }
 
-check_vless_path_en() {
-    while ([ "$trojanpath" = "$vlesspath" ] || [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$vlesspath" ]
-    do
-        if [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-        else
-            echo -e "${red}Error: paths for Trojan and VLESS must be different${clear}"
-        fi
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
-        read vlesspath
-        [[ -n $vlesspath ]] && echo ""
-        vlesspath=${vlesspath#"/"}
-    done
-}
+check_subscription_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS и подписки должны быть разными${clear}"
+    check_message[3_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan, VLESS and subscription must be different${clear}"
+    check_message[3_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
 
-check_subscription_path_ru() {
-    while ([ "$trojanpath" = "$subspath" ] || [ "$vlesspath" = "$subspath" ] || [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$subspath" ]
+    while ([[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]]) && [[ -n $subspath ]]
     do
         if [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]
         then
-            echo -e "${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+            echo -e "${check_message[1_$language]}"
         else
-            echo -e "${red}Ошибка: пути для Trojan, VLESS и подписки должны быть разными${clear}"
+            echo -e "${check_message[2_$language]}"
         fi
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
-        read subspath
+        echo -e "${check_message[3_$language]}"
+        read -r subspath
         [[ -n $subspath ]] && echo ""
         subspath=${subspath#"/"}
     done
 }
 
-check_subscription_path_en() {
-    while ([ "$trojanpath" = "$subspath" ] || [ "$vlesspath" = "$subspath" ] || [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$subspath" ]
-    do
-        if [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-        else
-            echo -e "${red}Error: paths for Trojan, VLESS and subscription must be different${clear}"
-        fi
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
-        read subspath
-        [[ -n $subspath ]] && echo ""
-        subspath=${subspath#"/"}
-    done
-}
+check_rulesetpath() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS, подписки и наборов правил должны быть разными${clear}"
+    check_message[3_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan, VLESS, subscription and rule sets must be different${clear}"
+    check_message[3_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
 
-check_rulesetpath_ru() {
-    while ([ "$trojanpath" = "$rulesetpath" ] || [ "$vlesspath" = "$rulesetpath" ] || [ "$subspath" = "$rulesetpath" ] || [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$rulesetpath" ]
+    while ([[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]]) && [[ -n $rulesetpath ]]
     do
         if [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]
         then
-            echo -e "${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+            echo -e "${check_message[1_$language]}"
         else
-            echo -e "${red}Ошибка: пути для Trojan, VLESS, подписки и наборов правил должны быть разными${clear}"
+            echo -e "${check_message[2_$language]}"
         fi
         echo ""
-        echo -e "${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
-        read rulesetpath
+        echo -e "${check_message[3_$language]}"
+        read -r rulesetpath
         [[ -n $rulesetpath ]] && echo ""
         rulesetpath=${rulesetpath#"/"}
     done
 }
 
-check_rulesetpath_en() {
-    while ([ "$trojanpath" = "$rulesetpath" ] || [ "$vlesspath" = "$rulesetpath" ] || [ "$subspath" = "$rulesetpath" ] || [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]) && [ -n "$rulesetpath" ]
+check_ssh_port() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: номер порта должен быть целым положительным числом${clear}"
+    check_message[2_ru]="${red}Ошибка: номер порта не может быть больше 65535${clear}"
+    check_message[3_ru]="${red}Ошибка: порты 80, 443, 10443, 11443 и 40000 будут заняты${clear}"
+    check_message[4_ru]="${textcolor}[?]${clear} Введите новый номер порта SSH или 22 (рекомендуется номер более 1024):"
+    check_message[1_en]="${red}Error: the port number must be a positive integer${clear}"
+    check_message[2_en]="${red}Error: the port number can't be greater than 65535${clear}"
+    check_message[3_en]="${red}Error: the ports 80, 443, 10443, 11443 and 40000 will be taken${clear}"
+    check_message[4_en]="${textcolor}[?]${clear} Enter new SSH port number or 22 (number above 1024 is recommended):"
+
+    while [[ ! $ssh_port =~ ^[1-9][0-9]*$ ]] || [[ $ssh_port -gt 65535 ]] || [[ $ssh_port -eq 80 ]] || [[ $ssh_port -eq 443 ]] || [[ $ssh_port -eq 10443 ]] || [[ $ssh_port -eq 11443 ]] || [[ $ssh_port -eq 40000 ]]
     do
-        if [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]
+        if [[ -z $ssh_port ]]
         then
-            echo -e "${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+            :
+        elif [[ ! $ssh_port =~ ^[1-9][0-9]*$ ]]
+        then
+            echo -e "${check_message[1_$language]}"
+            echo ""
+        elif [[ $ssh_port -gt 65535 ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
         else
-            echo -e "${red}Error: paths for Trojan, VLESS, subscription and rule sets must be different${clear}"
+            echo -e "${check_message[3_$language]}"
+            echo ""
         fi
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
-        read rulesetpath
-        [[ -n $rulesetpath ]] && echo ""
-        rulesetpath=${rulesetpath#"/"}
+        echo -e "${check_message[4_$language]}"
+        read -r ssh_port
+        [[ -n $ssh_port ]] && echo ""
     done
 }
 
-check_redirect_domain_ru() {
-    while [[ $redirect =~ " " ]] || [[ "$(curl -s -o /dev/null -w "%{http_code}" https://${redirect}/)" == "000" ]] || [[ -z $redirect ]]
+check_username() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: имя пользователя должно содержать только английские строчные буквы, цифры, символы _ и -, а также начинаться со строчной буквы${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите имя нового пользователя или root (рекомендуется не root):"
+    check_message[1_en]="${red}Error: the username should contain only lowercase letters, numbers, _ and - symbols, and must start with a lowercase letter${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter your username or root (non-root user is recommended):"
+
+    while [[ ! $username =~ ^[a-z][-a-z0-9_]*\$?$ ]]
     do
-        if [[ -z $redirect ]]
+        if [[ -n $username ]]
         then
-            :
-        else
-            echo -e "${red}Ошибка: домен введён неправильно или не имеет HTTPS, выберите другой домен${clear}"
+            echo -e "${check_message[1_$language]}"
             echo ""
         fi
-        echo -e "${textcolor}[?]${clear} Введите домен, на который будет идти перенаправление:"
-        read redirect
-        echo ""
+        echo -e "${check_message[2_$language]}"
+        read -r username
+        [[ -n $username ]] && echo ""
+    done
+}
+
+check_password() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: пароль не должен содержать кавычки \"${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите пароль SSH для нового пользователя (рекомендуется сложный пароль):"
+    check_message[1_en]="${red}Error: the password should not contain quotes \"${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter SSH password for the new user (a complex password is recommended):"
+
+    while [[ -z $password ]] || [[ $password =~ '"' ]]
+    do
+        if [[ -n $password ]]
+        then
+            echo -e "${check_message[1_$language]}"
+            echo ""
+        fi
+        echo -e "${check_message[2_$language]}"
+        read -r password
+        [[ -n $password ]] && echo ""
+    done
+}
+
+check_redirect_domain() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: домен введён неправильно или не имеет HTTPS, выберите другой домен${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите домен, на который будет идти перенаправление:"
+    check_message[1_en]="${red}Error: this domain is invalid or does not have HTTPS, select another domain${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter the domain to which requests will be redirected:"
+
+    while [[ -z $redirect ]] || [[ $redirect =~ " " ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" https://${redirect}) == "000" ]]
+    do
+        if [[ -n $redirect ]]
+        then
+            echo -e "${check_message[1_$language]}"
+            echo ""
+        fi
+        echo -e "${check_message[2_$language]}"
+        read -r redirect
+        [[ -n $redirect ]] && echo ""
         crop_redirect_domain
     done
 }
 
-check_redirect_domain_en() {
-    while [[ $redirect =~ " " ]] || [[ "$(curl -s -o /dev/null -w "%{http_code}" https://${redirect}/)" == "000" ]] || [[ -z $redirect ]]
-    do
-        if [[ -z $redirect ]]
-        then
-            :
-        else
-            echo -e "${red}Error: this domain is invalid or does not have HTTPS, select another domain${clear}"
-            echo ""
-        fi
-        echo -e "${textcolor}[?]${clear} Enter the domain to which requests will be redirected:"
-        read redirect
-        echo ""
-        crop_redirect_domain
-    done
-}
+check_site_link() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: сайт недоступен по данной ссылке или не имеет HTTPS, выберите другой сайт${clear}"
+    check_message[2_ru]="${textcolor}[?]${clear} Введите ссылку на главную страницу выбранного сайта:"
+    check_message[1_en]="${red}Error: the website is not available or does not have HTTPS, select another website${clear}"
+    check_message[2_en]="${textcolor}[?]${clear} Enter the link to the main page of the selected website:"
 
-check_index_ru() {
-    while [[ $index =~ " " ]] || [ ! -f /root${index} ] || [ -z "$index" ]
-    do
-        echo -e "${red}Ошибка: файл /root${index} не существует, проверьте, загружена ли папка вашего сайта в /root директорию сервера${clear}"
-        echo ""
-        echo -e "${textcolor}[?]${clear} Введите путь до index файла внутри папки вашего сайта (например, /site_folder/index.html):"
-        read index
-        echo ""
-        edit_index
-    done
-}
-
-check_index_en() {
-    while [[ $index =~ " " ]] || [ ! -f /root${index} ] || [ -z "$index" ]
-    do
-        echo -e "${red}Error: file /root${index} doesn't exist, check if the folder of your website is uploaded to the /root directory of the server${clear}"
-        echo ""
-        echo -e "${textcolor}[?]${clear} Enter the path to the index file inside the folder of your website (e. g., /site_folder/index.html):"
-        read index
-        echo ""
-        edit_index
-    done
-}
-
-check_site_link_ru() {
     apt install wget -y &> /dev/null
 
-    while [[ $sitelink =~ " " ]] || [[ "$(curl -s -o /dev/null -w "%{http_code}" https://${sitelink})" == "000" ]] || [[ -z $sitelink ]] || [ $(wget -q -O /dev/null https://${sitelink}; echo $?) -ne 0 ]
+    while [[ -z $site_link ]] || [[ $site_link =~ " " ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" https://${site_link}) == "000" ]] || ! wget -q -O /dev/null https://${site_link}
     do
-        if [[ -z $sitelink ]]
+        if [[ -n $site_link ]]
         then
-            :
-        else
-            echo -e "${red}Ошибка: сайт недоступен по данной ссылке или не имеет HTTPS, выберите другой сайт${clear}"
+            echo -e "${check_message[1_$language]}"
             echo ""
         fi
-        echo -e "${textcolor}[?]${clear} Введите ссылку на главную страницу выбранного сайта:"
-        read sitelink
-        echo ""
-        sitelink=${sitelink#*"://"}
+        echo -e "${check_message[2_$language]}"
+        read -r site_link
+        [[ -n $site_link ]] && echo ""
+        site_link=${site_link#*"://"}
     done
 }
 
-check_site_link_en() {
-    apt install wget -y &> /dev/null
-    
-    while [[ $sitelink =~ " " ]] || [[ "$(curl -s -o /dev/null -w "%{http_code}" https://${sitelink})" == "000" ]] || [[ -z $sitelink ]] || [ $(wget -q -O /dev/null https://${sitelink}; echo $?) -ne 0 ]
+check_index_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: файл"
+    check_message[2_ru]="не существует, проверьте, загружена ли папка вашего сайта в /root директорию сервера${clear}"
+    check_message[3_ru]="${textcolor}[?]${clear} Введите путь до index файла внутри папки вашего сайта (например, /site_folder/index.html):"
+    check_message[1_en]="${red}Error: the file"
+    check_message[2_en]="doesn't exist, check if the folder of your website is uploaded to the /root directory of the server${clear}"
+    check_message[3_en]="${textcolor}[?]${clear} Enter the path to the index file inside the folder of your website (e. g., /site_folder/index.html):"
+
+    while [[ -z $index_path ]] || [[ $index_path =~ " " ]] || [[ ! -f /root${index_path} ]]
     do
-        if [[ -z $sitelink ]]
+        if [[ -n $index_path ]]
         then
-            :
-        else
-            echo -e "${red}Error: the website is not available or does not have HTTPS, select another website${clear}"
+            echo -e "${check_message[1_$language]} /root${index_path} ${check_message[2_$language]}"
             echo ""
         fi
-        echo -e "${textcolor}[?]${clear} Enter the link to the main page of the selected website:"
-        read sitelink
-        echo ""
-        sitelink=${sitelink#*"://"}
+        echo -e "${check_message[3_$language]}"
+        read -r index_path
+        [[ -n $index_path ]] && echo ""
+        edit_index_path
     done
 }
 
 nginx_login() {
-    comment1="#"
-    comment2=""
-    comment3=""
-    redirect="${domain}"
-    sitedir="html"
+    comment_1="#"; comment_2=""; comment_3=""
+    redirect="example.com"   # Dummy, will be commented
+    site_dir="html"
     index="index.html index.htm"
 }
 
 nginx_redirect() {
-    comment1=""
-    comment2="#"
-    comment3=""
-    sitedir="html"
+    declare -A -g input_message=()
+    input_message[1_ru]="${textcolor}[?]${clear} Введите домен, на который будет идти перенаправление:"
+    input_message[1_en]="${textcolor}[?]${clear} Enter the domain to which requests will be redirected:"
+
+    comment_1=""; comment_2="#"; comment_3=""
+    site_dir="html"
     index="index.html index.htm"
 
-    if [[ "${language}" == "1" ]]
-    then
-        echo -e "${textcolor}[?]${clear} Введите домен, на который будет идти перенаправление:"
-        read redirect
-        echo ""
-        crop_redirect_domain
-        check_redirect_domain_ru
-    else
-        echo -e "${textcolor}[?]${clear} Enter the domain to which requests will be redirected:"
-        read redirect
-        echo ""
-        crop_redirect_domain
-        check_redirect_domain_en
-    fi
+    echo -e "${input_message[1_$language]}"
+    read -r redirect
+    [[ -n $redirect ]] && echo ""
+    crop_redirect_domain
+    check_redirect_domain
 }
 
 nginx_copy_site() {
-    comment1=""
-    comment2=""
-    comment3="#"
-    redirect="${domain}"
+    comment_1=""; comment_2=""; comment_3="#"
+    redirect="example.com"   # Dummy, will be commented
 
-    if [[ "${language}" == "1" ]]
-    then
+    nginx_copy_site_text_ru() {
         echo -e "${red}ВНИМАНИЕ!${clear}"
         echo "Некоторые сайты могут содержать большие файлы или большое число страниц, которые могут занять много места на диске"
         echo "Функционал некоторых сайтов может быть частично утрачен"
         echo "Вы выбираете какой-либо сайт на свой страх и риск"
         echo ""
         echo -e "${textcolor}[?]${clear} Введите ссылку на главную страницу выбранного сайта:"
-        read sitelink
-        echo ""
-        sitelink=${sitelink#*"://"}
-        check_site_link_ru
-    else
+        read -r site_link
+        [[ -n $site_link ]] && echo ""
+    }
+
+    nginx_copy_site_text_en() {
         echo -e "${red}ATTENTION!${clear}"
         echo "Some websites might contain large files or large number of pages, which may take a lot of disk space"
         echo "Some websites may partially lose their functionality"
         echo "You choose the website at your own risk"
         echo ""
         echo -e "${textcolor}[?]${clear} Enter the link to the main page of the selected website:"
-        read sitelink
-        echo ""
-        sitelink=${sitelink#*"://"}
-        check_site_link_en
-    fi
+        read -r site_link
+        [[ -n $site_link ]] && echo ""
+    }
+
+    nginx_copy_site_text_${language}
+    site_link=${site_link#*"://"}
+    check_site_link
 }
 
 nginx_site() {
-    comment1=""
-    comment2=""
-    comment3="#"
-    redirect="${domain}"
+    comment_1=""; comment_2=""; comment_3="#"
+    redirect="example.com"   # Dummy, will be commented
 
-    if [[ "${language}" == "1" ]]
-    then
+    nginx_site_text_ru() {
         echo -e "${red}ВНИМАНИЕ!${clear}"
         echo -e "Сначала загрузите папку с файлами вашего сайта в ${textcolor}/root${clear} директорию сервера"
         echo "Вы можете сделать это с помощью SFTP или SCP через другое окно, не прерывая работу скрипта"
         echo ""
         echo -e "${textcolor}[?]${clear} Введите путь до index файла внутри папки вашего сайта (например, /site_folder/index.html):"
-        read index
-        echo ""
-        edit_index
-        check_index_ru
-    else
+        read -r index_path
+        [[ -n $index_path ]] && echo ""
+    }
+
+    nginx_site_text_en() {
         echo -e "${red}ATTENTION!${clear}"
         echo -e "First, upload the folder with the contents of your website to the ${textcolor}/root${clear} directory of the server"
         echo "You can do this via SFTP or SCP in another window without interrupting the script"
         echo ""
         echo -e "${textcolor}[?]${clear} Enter the path to the index file inside the folder of your website (e. g., /site_folder/index.html):"
-        read index
-        echo ""
-        edit_index
-        check_index_en
-    fi
+        read -r index_path
+        [[ -n $index_path ]] && echo ""
+    }
+
+    nginx_site_text_${language}
+    edit_index_path
+    check_index_path
 }
 
 nginx_options() {
@@ -670,280 +549,278 @@ nginx_options() {
     esac
 }
 
-enter_ssh_data_ru() {
-    if [[ "${sshufw}" != "2" ]]
-    then
-        echo -e "${textcolor}[?]${clear} Введите новый номер порта SSH или 22 (рекомендуется номер более 1024):"
-        read sshp
-        echo ""
-        check_ssh_port_ru
-        echo -e "${textcolor}[?]${clear} Введите имя нового пользователя или root (рекомендуется не root):"
-        read username
-        echo ""
-        check_username_ru
-        echo -e "${textcolor}[?]${clear} Введите пароль SSH для пользователя (рекомендуется сложный пароль):"
-        read password
-        echo ""
-        check_password_ru
-    fi
-}
+enter_domain_data() {
+    declare -A -g input_message=()
+    input_message[1_ru]="${textcolor}[?]${clear} Введите ваш домен:"
+    input_message[2_ru]="${textcolor}[?]${clear} Введите вашу почту${email_text}:"
+    input_message[3_ru]="${textcolor}[?]${clear} Введите ваш API токен Cloudflare (Edit zone DNS) или Cloudflare global API key:"
+    input_message[1_en]="${textcolor}[?]${clear} Enter your domain name:"
+    input_message[2_en]="${textcolor}[?]${clear} Enter your email${email_text}:"
+    input_message[3_en]="${textcolor}[?]${clear} Enter your Cloudflare API token (Edit zone DNS) or Cloudflare global API key:"
 
-enter_ssh_data_en() {
-    if [[ "${sshufw}" != "2" ]]
-    then
-        echo -e "${textcolor}[?]${clear} Enter new SSH port number or 22 (number above 1024 is recommended):"
-        read sshp
-        echo ""
-        check_ssh_port_en
-        echo -e "${textcolor}[?]${clear} Enter your username or root (non-root user is recommended):"
-        read username
-        echo ""
-        check_username_en
-        echo -e "${textcolor}[?]${clear} Enter new SSH password (a complex password is recommended):"
-        read password
-        echo ""
-        check_password_en
-    fi
-}
-
-enter_domain_data_ru() {
-    domain=""
-    email=""
-    cftoken=""
+    domain=""; email=""; cf_token=""
     echo ""
     while [[ -z $domain ]]
     do
-        echo -e "${textcolor}[?]${clear} Введите ваш домен:"
-        read domain
-        echo ""
+        echo -e "${input_message[1_$language]}"
+        read -r domain
+        [[ -n $domain ]] && echo ""
     done
     crop_domain
     while [[ -z $email ]]
     do
-        echo -e "${textcolor}[?]${clear} Введите вашу почту${email_text}:"
-        read email
-        echo ""
+        echo -e "${input_message[2_$language]}"
+        read -r email
+        [[ -n $email ]] && echo ""
     done
-    if [[ "${validation_type}" == "1" ]]
+    if [[ "$validation_type" == "1" ]]
     then
-        while [[ -z $cftoken ]]
+        while [[ -z $cf_token ]]
         do
-            echo -e "${textcolor}[?]${clear} Введите ваш API токен Cloudflare (Edit zone DNS) или Cloudflare global API key:"
-            read cftoken
-            echo ""
-        done
-    fi
-}
-
-enter_domain_data_en() {
-    domain=""
-    email=""
-    cftoken=""
-    echo ""
-    while [[ -z $domain ]]
-    do
-        echo -e "${textcolor}[?]${clear} Enter your domain name:"
-        read domain
-        echo ""
-    done
-    crop_domain
-    while [[ -z $email ]]
-    do
-        echo -e "${textcolor}[?]${clear} Enter your email${email_text}:"
-        read email
-        echo ""
-    done
-    if [[ "${validation_type}" == "1" ]]
-    then
-        while [[ -z $cftoken ]]
-        do
-            echo -e "${textcolor}[?]${clear} Enter your Cloudflare API token (Edit zone DNS) or Cloudflare global API key:"
-            read cftoken
-            echo ""
+            echo -e "${input_message[3_$language]}"
+            read -r cf_token
+            [[ -n $cf_token ]] && echo ""
         done
     fi
 }
 
 enter_data_ru() {
+    echo -e "${textcolor}[?]${clear} Вы точно обновили систему и перезагрузили сервер перед запуском скрипта?"
+    echo "1 - Обновить и перезагрузить сейчас"
+    echo "2 - Продолжить (система была обновлена и перезагружена)"
+    read -r system_updated
+    [[ -n $system_updated ]] && echo ""
+    update_and_reboot
     echo -e "${textcolor}[?]${clear} Выберите метод валидации сертификатов:"
     echo "1 - DNS Cloudflare (если ваш домен прикреплён к Cloudflare)"
     echo "2 - Standalone (если ваш домен прикреплён к другому сервису)"
-    read validation_type
-    if [[ "${validation_type}" == "1" ]]
+    read -r validation_type
+    if [[ "$validation_type" == "1" ]]
     then
         email_text=", зарегистрированную на Cloudflare"
-        enter_domain_data_ru
-        check_cf_token_ru
+        enter_domain_data
+        check_cf_token
     else
         email_text=" для выпуска сертификата"
-        echo ""
+        [[ -n $validation_type ]] && echo ""
         echo -e "${red}ВНИМАНИЕ!${clear}"
         echo "Обязательно проверьте правильность написания домена"
-        enter_domain_data_ru
+        enter_domain_data
     fi
     echo -e "${textcolor}[?]${clear} Выберите вариант настройки прокси:"
     echo "1 - Терминирование TLS на NGINX, протоколы Trojan и VLESS, транспорт WebSocket или HTTPUpgrade"
     echo "2 - Терминирование TLS на HAProxy, протокол Trojan, выбор бэкенда Sing-Box или NGINX по паролю Trojan"
-    read variant
-    echo ""
-    if [[ "${variant}" == "1" ]]
+    read -r variant
+    [[ -n $variant ]] && echo ""
+    if [[ "$variant" == "1" ]]
     then
         echo -e "${textcolor}[?]${clear} Выберите транспорт:"
         echo "1 - WebSocket"
         echo "2 - HTTPUpgrade"
-        read transport
-        echo ""
+        read -r transport
+        [[ -n $transport ]] && echo ""
     fi
     echo -e "${textcolor}[?]${clear} Выберите вариант настройки NGINX/HAProxy:"
     echo "1 - Будет спрашивать логин и пароль вместо сайта, 401 Unauthorized"
     echo "2 - Будет перенаправлять на другой домен, 301 Moved Permanently"
-    echo "3 - Скопировать чужой сайт на свой сервер, тестовая опция"
-    echo "4 - Свой сайт (при наличии), тестовая опция"
-    read option;
-    echo ""
+    echo "3 - Скопировать чужой сайт на этот сервер, тестовая опция"
+    echo "4 - Загрузить свой сайт (при наличии), тестовая опция"
+    read -r option
+    [[ -n $option ]] && echo ""
     nginx_options
     echo -e "${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
-    read trjpass
+    read -r trjpass
     [[ -n $trjpass ]] && echo ""
-    check_trjpass_ru
-    if [[ "${variant}" == "1" ]]
+    check_trjpass
+    if [[ "$variant" == "1" ]]
     then
         echo -e "${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
-        read trojanpath
+        read -r trojanpath
         [[ -n $trojanpath ]] && echo ""
         trojanpath=${trojanpath#"/"}
-        check_trojan_path_ru
+        check_trojan_path
         echo -e "${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
-        read uuid
+        read -r uuid
         [[ -n $uuid ]] && echo ""
-        check_uuid_ru
+        check_uuid
         echo -e "${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
-        read vlesspath
+        read -r vlesspath
         [[ -n $vlesspath ]] && echo ""
         vlesspath=${vlesspath#"/"}
-        check_vless_path_ru
+        check_vless_path
     fi
     echo -e "${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
-    read subspath
+    read -r subspath
     [[ -n $subspath ]] && echo ""
     subspath=${subspath#"/"}
-    check_subscription_path_ru
+    check_subscription_path
     echo -e "${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
-    read rulesetpath
+    read -r rulesetpath
     [[ -n $rulesetpath ]] && echo ""
     rulesetpath=${rulesetpath#"/"}
-    check_rulesetpath_ru
+    check_rulesetpath
     echo -e "${textcolor}[?]${clear} Нужна ли настройка безопасности (SSH, UFW и unattended-upgrades)?"
     echo "1 - Да (в редких случаях при нестандартных настройках у хостера можно потерять доступ к серверу)"
     echo "2 - Нет (тогда рекомендуется выполнить настройку самостоятельно после завершения работы скрипта)"
-    read sshufw
+    read -r ssh_ufw
+    [[ -n $ssh_ufw ]] && echo ""
+    if [[ "$ssh_ufw" != "2" ]]
+    then
+        echo -e "${textcolor}[?]${clear} Введите новый номер порта SSH или 22 (рекомендуется номер более 1024):"
+        read -r ssh_port
+        [[ -n $ssh_port ]] && echo ""
+        check_ssh_port
+        echo -e "${textcolor}[?]${clear} Введите имя нового пользователя или root (рекомендуется не root):"
+        read -r username
+        [[ -n $username ]] && echo ""
+        check_username
+        echo -e "${textcolor}[?]${clear} Введите пароль SSH для нового пользователя (рекомендуется сложный пароль):"
+        read -r password
+        [[ -n $password ]] && echo ""
+        check_password
+    fi
     echo ""
-    enter_ssh_data_ru
+    echo ""
 }
 
 enter_data_en() {
+    echo -e "${textcolor}[?]${clear} Are you sure you have updated the system and rebooted the server before running the script?"
+    echo "1 - Update and reboot now"
+    echo "2 - Continue (the system has been updated and rebooted)"
+    read -r system_updated
+    [[ -n $system_updated ]] && echo ""
+    update_and_reboot
     echo -e "${textcolor}[?]${clear} Select a certificate validation method:"
     echo "1 - DNS Cloudflare (if your domain is linked to Cloudflare)"
     echo "2 - Standalone (if your domain is linked to another service)"
-    read validation_type
-    if [[ "${validation_type}" == "1" ]]
+    read -r validation_type
+    if [[ "$validation_type" == "1" ]]
     then
         email_text=" registered on Cloudflare"
-        enter_domain_data_en
-        check_cf_token_en
+        enter_domain_data
+        check_cf_token
     else
         email_text=" to issue a certificate"
-        echo ""
+        [[ -n $validation_type ]] && echo ""
         echo -e "${red}ATTENTION!${clear}"
         echo "Be sure to check the spelling of the domain name"
-        enter_domain_data_en
+        enter_domain_data
     fi
     echo -e "${textcolor}[?]${clear} Select a proxy setup option:"
     echo "1 - TLS termination on NGINX, Trojan and VLESS protocols, WebSocket or HTTPUpgrade transport"
     echo "2 - TLS termination on HAProxy, Trojan protocol, Sing-Box or NGINX backend selection based on Trojan passwords"
-    read variant
-    echo ""
-    if [[ "${variant}" == "1" ]]
+    read -r variant
+    [[ -n $variant ]] && echo ""
+    if [[ "$variant" == "1" ]]
     then
         echo -e "${textcolor}[?]${clear} Select transport:"
         echo "1 - WebSocket"
         echo "2 - HTTPUpgrade"
-        read transport
-        echo ""
+        read -r transport
+        [[ -n $transport ]] && echo ""
     fi
     echo -e "${textcolor}[?]${clear} Select NGINX/HAProxy setup option:"
     echo "1 - Will show a login popup asking for username and password, 401 Unauthorized"
     echo "2 - Will redirect to another domain, 301 Moved Permanently"
-    echo "3 - Copy someone else's website to your server, experimental option"
-    echo "4 - Your own website (if you have one), experimental option"
-    read option;
-    echo ""
+    echo "3 - Copy someone else's website to this server, experimental option"
+    echo "4 - Upload your own website (if you have one), experimental option"
+    read -r option
+    [[ -n $option ]] && echo ""
     nginx_options
     echo -e "${textcolor}[?]${clear} Enter your password for Trojan or leave this empty to generate a random password:"
-    read trjpass
+    read -r trjpass
     [[ -n $trjpass ]] && echo ""
-    check_trjpass_en
-    if [[ "${variant}" == "1" ]]
+    check_trjpass
+    if [[ "$variant" == "1" ]]
     then
         echo -e "${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
-        read trojanpath
+        read -r trojanpath
         [[ -n $trojanpath ]] && echo ""
         trojanpath=${trojanpath#"/"}
-        check_trojan_path_en
+        check_trojan_path
         echo -e "${textcolor}[?]${clear} Enter your UUID for VLESS or leave this empty to generate a random UUID:"
-        read uuid
+        read -r uuid
         [[ -n $uuid ]] && echo ""
-        check_uuid_en
+        check_uuid
         echo -e "${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
-        read vlesspath
+        read -r vlesspath
         [[ -n $vlesspath ]] && echo ""
         vlesspath=${vlesspath#"/"}
-        check_vless_path_en
+        check_vless_path
     fi
     echo -e "${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
-    read subspath
+    read -r subspath
     [[ -n $subspath ]] && echo ""
     subspath=${subspath#"/"}
-    check_subscription_path_en
+    check_subscription_path
     echo -e "${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
-    read rulesetpath
+    read -r rulesetpath
     [[ -n $rulesetpath ]] && echo ""
     rulesetpath=${rulesetpath#"/"}
-    check_rulesetpath_en
+    check_rulesetpath
     echo -e "${textcolor}[?]${clear} Do you need security setup (SSH, UFW and unattended-upgrades)?"
     echo "1 - Yes (in rare cases of hoster's non-standard settings, access to the server might be lost)"
     echo "2 - No (then it is recommended to perform the setup manually after the script finishes running)"
-    read sshufw
-    echo ""
-    enter_ssh_data_en
-}
-
-enter_data() {
-    echo ""
-    if [[ "${language}" == "1" ]]
+    read -r ssh_ufw
+    [[ -n $ssh_ufw ]] && echo ""
+    if [[ "$ssh_ufw" != "2" ]]
     then
-        enter_data_ru
-    else
-        enter_data_en
+        echo -e "${textcolor}[?]${clear} Enter new SSH port number or 22 (number above 1024 is recommended):"
+        read -r ssh_port
+        [[ -n $ssh_port ]] && echo ""
+        check_ssh_port
+        echo -e "${textcolor}[?]${clear} Enter your username or root (non-root user is recommended):"
+        read -r username
+        [[ -n $username ]] && echo ""
+        check_username
+        echo -e "${textcolor}[?]${clear} Enter SSH password for the new user (a complex password is recommended):"
+        read -r password
+        [[ -n $password ]] && echo ""
+        check_password
     fi
     echo ""
     echo ""
 }
 
 enable_bbr() {
-    echo -e "${textcolor_light}Setting up BBR...${clear}"
-    [[ ! "$(sysctl net.core.default_qdisc)" == *"= fq" ]] && echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-    [[ ! "$(sysctl net.ipv4.tcp_congestion_control)" == *"bbr" ]] && echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка BBR...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up BBR...${clear}"
+
+    echo -e "${info_message[1_$language]}"
+    touch /etc/sysctl.conf
+    [[ $(sysctl net.core.default_qdisc) != *"= fq" ]] && echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
+    [[ $(sysctl net.ipv4.tcp_congestion_control) != *"bbr" ]] && echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
     sysctl -p
     echo ""
 }
 
-install_packages() {
-    echo -e "${textcolor_light}Installing packages...${clear}"
-    apt install sudo coreutils nano wget ufw certbot python3-certbot-dns-cloudflare cron gnupg2 ca-certificates lsb-release openssl sed jq net-tools htop -y
-    [[ "${sshufw}" != "2" ]] && apt install unattended-upgrades -y
+downgrade_nasty_warp() {
+    # Because some WARP releases are buggy...
+    warp_version="2025.6.1335.0"
+    proc_arch="amd64"
+    [[ $(uname -m) == "aarch64" || $(uname -m) == "arm64" ]] && proc_arch="arm64"
+    wget -q https://pkg.cloudflareclient.com/pool/${os_codename}/main/c/cloudflare-warp/cloudflare-warp_${warp_version}_${proc_arch}.deb
 
-    if grep -q -e "bullseye" -e "bookworm" /etc/os-release
+    if [[ $? -eq 0 ]]
+    then
+        dpkg -i cloudflare-warp_${warp_version}_${proc_arch}.deb
+        rm -f ./cloudflare-warp_${warp_version}_${proc_arch}.deb
+        apt-mark hold cloudflare-warp
+    fi
+}
+
+install_packages() {
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Установка необходимых пакетов...${clear}"
+    info_message[1_en]="${textcolor_light}Installing the required packages...${clear}"
+
+    echo -e "${info_message[1_$language]}"
+    apt install sudo coreutils nano wget ufw certbot python3-certbot-dns-cloudflare cron gnupg2 ca-certificates openssl sed jq net-tools htop -y
+    [[ "$ssh_ufw" != "2" ]] && apt install unattended-upgrades -y
+    os_codename=$(grep "VERSION_CODENAME=" /etc/os-release | cut -d "=" -f 2)
+
+    if grep -q -e "bullseye" -e "bookworm" -e "trixie" /etc/os-release
     then
         apt install debian-archive-keyring -y
         server_os="debian"
@@ -952,96 +829,108 @@ install_packages() {
         server_os="ubuntu"
     fi
 
-    [ ! -d /usr/share/keyrings ] && mkdir /usr/share/keyrings
+    [[ ! -d /usr/share/keyrings ]] && mkdir -p /usr/share/keyrings
     curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(grep "VERSION_CODENAME=" /etc/os-release | cut -d "=" -f 2) main" | tee /etc/apt/sources.list.d/cloudflare-client.list
+    echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ ${os_codename} main" | tee /etc/apt/sources.list.d/cloudflare-client.list
     apt-get update -y && apt-get install cloudflare-warp -y
-    #wget https://pkg.cloudflareclient.com/pool/$(grep "VERSION_CODENAME=" /etc/os-release | cut -d "=" -f 2)/main/c/cloudflare-warp/cloudflare-warp_2024.6.497-1_amd64.deb
-    #dpkg -i cloudflare-warp_2024.6.497-1_amd64.deb
-    #apt-mark hold cloudflare-warp
+    #downgrade_nasty_warp
 
-    [ ! -d /etc/apt/keyrings ] && mkdir /etc/apt/keyrings
+    [[ ! -d /etc/apt/keyrings ]] && mkdir -p /etc/apt/keyrings
     curl -fsSL https://sing-box.app/gpg.key -o /etc/apt/keyrings/sagernet.asc
     chmod a+r /etc/apt/keyrings/sagernet.asc
-    echo "deb [arch=`dpkg --print-architecture` signed-by=/etc/apt/keyrings/sagernet.asc] https://deb.sagernet.org/ * *" | tee /etc/apt/sources.list.d/sagernet.list > /dev/null
-    apt-get update -y
-    apt-get install sing-box -y
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/sagernet.asc] https://deb.sagernet.org/ * *" | tee /etc/apt/sources.list.d/sagernet.list > /dev/null
+    apt-get update -y && apt-get install sing-box -y
     apt-mark hold sing-box
 
-    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg > /dev/null
     gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/${server_os} `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+    echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/${server_os} ${os_codename} nginx" | tee /etc/apt/sources.list.d/nginx.list
     echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
-    apt update -y
-    apt install nginx -y
-    [ ! -d /var/www ] && mkdir /var/www
+    apt update -y && apt install nginx -y
+    [[ ! -d /var/www ]] && mkdir -p /var/www
 
-    [[ "${variant}" != "1" ]] && apt install haproxy -y
+    [[ "$variant" != "1" ]] && apt install haproxy -y
+    apt autoremove -y; apt autoclean -y
     echo ""
 }
 
 create_user() {
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Создание пользователя ${username}...${clear}"
+    info_message[1_en]="${textcolor_light}Creating user ${username}...${clear}"
+
     if [[ "$username" != "root" ]]
     then
-        echo -e "${textcolor_light}Creating user ${username}...${clear}"
+        echo -e "${info_message[1_$language]}"
         useradd -m -s $(which bash) -G sudo ${username}
     fi
-    echo "${username}:${password}" | chpasswd
+
+    echo "${username}:$(openssl passwd -6 "${password}")" | chpasswd -e
     echo ""
 }
 
 setup_ssh() {
-    if [[ "$username" != "root" ]] || [ $sshp -ne 22 ]
-    then
-        echo -e "${textcolor_light}Changing SSH settings...${clear}"
-    fi
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Изменение настроек SSH...${clear}"
+    info_message[1_en]="${textcolor_light}Changing SSH settings...${clear}"
 
     if [[ "$username" == "root" ]]
     then
-        sed -i -e "s/.*Port .*/Port ${sshp}/g" -e "s/.*PermitRootLogin no.*/PermitRootLogin yes/g" -e "s/.*#PermitRootLogin .*/PermitRootLogin yes/g" -e "s/.*PasswordAuthentication no.*/PasswordAuthentication yes/g" -e "s/.*#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-        [ ! -d /root/.ssh ] && mkdir /root/.ssh
+        [[ $ssh_port -ne 22 ]] && echo -e "${info_message[1_$language]}"
+        sed -i -e "s/.*Port .*/Port ${ssh_port}/g" -e "s/.*PermitRootLogin no.*/PermitRootLogin yes/g" -e "s/.*#PermitRootLogin .*/PermitRootLogin yes/g" -e "s/.*PasswordAuthentication no.*/PasswordAuthentication yes/g" -e "s/.*#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+        [[ ! -d /root/.ssh ]] && mkdir -p /root/.ssh
     else
-        sed -i -e "s/.*Port .*/Port ${sshp}/g" -e "s/.*PermitRootLogin yes.*/PermitRootLogin no/g" -e "s/.*#PermitRootLogin .*/PermitRootLogin no/g" -e "s/.*PasswordAuthentication no.*/PasswordAuthentication yes/g" -e "s/.*#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
-        [ ! -d /home/${username}/.ssh ] && mkdir /home/${username}/.ssh
+        echo -e "${info_message[1_$language]}"
+        sed -i -e "s/.*Port .*/Port ${ssh_port}/g" -e "s/.*PermitRootLogin yes.*/PermitRootLogin no/g" -e "s/.*#PermitRootLogin .*/PermitRootLogin no/g" -e "s/.*PasswordAuthentication no.*/PasswordAuthentication yes/g" -e "s/.*#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+        [[ ! -d /home/${username}/.ssh ]] && mkdir -p /home/${username}/.ssh
         chown ${username}:sudo /home/${username}/.ssh
         chmod 700 /home/${username}/.ssh
     fi
 
     if grep -q "noble" /etc/os-release
     then
-        sed -i "s/.*ListenStream.*/ListenStream=${sshp}/g" /lib/systemd/system/ssh.socket
+        sed -i "s/.*ListenStream.*/ListenStream=${ssh_port}/g" /lib/systemd/system/ssh.socket
         systemctl daemon-reload
         systemctl restart ssh.socket
     fi
 
+    grep -q "PasswordAuthentication yes" /etc/ssh/sshd_config.d/50-cloud-init.conf &> /dev/null && rm -f /etc/ssh/sshd_config.d/50-cloud-init.conf
     systemctl restart ssh.service
     echo ""
 }
 
 setup_ufw() {
-    echo -e "${textcolor_light}Setting up UFW...${clear}"
-    ufw allow ${sshp}/tcp
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка UFW...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up UFW...${clear}"
+
+    echo -e "${info_message[1_$language]}"
+    ufw allow ${ssh_port}/tcp
     ufw allow 443/tcp
     # Protection from incoming Reality requests:
-    ufw insert 1 deny from ${serverip}/22 &> /dev/null
+    ufw insert 1 deny from ${server_ip}/22 &> /dev/null
     echo ""
-    yes | ufw enable
+    ufw --force enable
     echo ""
     ufw status
 }
 
 unattended_upgrades() {
-    echo -e "${textcolor_light}Setting up unattended upgrades...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка unattended-upgrades...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up unattended upgrades...${clear}"
+
+    echo -e "${info_message[1_$language]}"
     echo 'Unattended-Upgrade::Mail "root";' >> /etc/apt/apt.conf.d/50unattended-upgrades
     echo unattended-upgrades unattended-upgrades/enable_auto_updates boolean true | debconf-set-selections
     dpkg-reconfigure -f noninteractive unattended-upgrades
-    systemctl restart unattended-upgrades
+    systemctl restart unattended-upgrades.service
     systemctl enable unattended-upgrades.service
     echo ""
 }
 
-setup_security() {
-    if [[ "${sshufw}" != "2" ]]
+setup_general_security() {
+    if [[ "$ssh_ufw" != "2" ]]
     then
         create_user
         setup_ssh
@@ -1051,68 +940,72 @@ setup_security() {
 }
 
 cert_dns_cf() {
-    if [[ "$cftoken" =~ [A-Z] ]]
+    if [[ $cf_token =~ [A-Z] ]]
     then
-        echo "dns_cloudflare_api_token = ${cftoken}" >> /etc/letsencrypt/cloudflare.credentials
+        echo "dns_cloudflare_api_token = ${cf_token}" >> /etc/letsencrypt/cloudflare.credentials
     else
         echo "dns_cloudflare_email = ${email}" >> /etc/letsencrypt/cloudflare.credentials
-        echo "dns_cloudflare_api_key = ${cftoken}" >> /etc/letsencrypt/cloudflare.credentials
+        echo "dns_cloudflare_api_key = ${cf_token}" >> /etc/letsencrypt/cloudflare.credentials
     fi
 
     chown root:root /etc/letsencrypt/cloudflare.credentials
     chmod 600 /etc/letsencrypt/cloudflare.credentials
     certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.credentials --dns-cloudflare-propagation-seconds 35 -d ${domain},*.${domain} --agree-tos -m ${email} --no-eff-email --non-interactive
 
-    if [ $? -ne 0 ]
+    if [[ $? -ne 0 ]]
     then
         sleep 3
         echo ""
-        rm -rf /etc/letsencrypt/live/${domain} &> /dev/null
-        rm -rf /etc/letsencrypt/archive/${domain} &> /dev/null
-        rm /etc/letsencrypt/renewal/${domain}.conf &> /dev/null
-        echo -e "${textcolor_light}Requesting a certificate: 2nd attempt...${clear}"
+        echo -e "${info_message[2_$language]}"
+        certbot delete --cert-name ${domain} --quiet &> /dev/null
         certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.credentials --dns-cloudflare-propagation-seconds 35 -d ${domain},*.${domain} --agree-tos -m ${email} --no-eff-email --non-interactive
     fi
 
-    { crontab -l; echo "0 2 * * * certbot -q renew"; } | crontab -
+    echo "0 2 * * * certbot -q renew" | crontab -
 }
 
 cert_standalone() {
     ufw allow 80 &> /dev/null
     certbot certonly --standalone --preferred-challenges http --agree-tos --email ${email} -d ${domain} --no-eff-email --non-interactive
 
-    if [ $? -ne 0 ]
+    if [[ $? -ne 0 ]]
     then
         sleep 3
         echo ""
-        rm -rf /etc/letsencrypt/live/${domain} &> /dev/null
-        rm -rf /etc/letsencrypt/archive/${domain} &> /dev/null
-        rm /etc/letsencrypt/renewal/${domain}.conf &> /dev/null
-        echo -e "${textcolor_light}Requesting a certificate: 2nd attempt...${clear}"
+        echo -e "${info_message[2_$language]}"
+        certbot delete --cert-name ${domain} --quiet &> /dev/null
         certbot certonly --standalone --preferred-challenges http --agree-tos --email ${email} -d ${domain} --no-eff-email --non-interactive
     fi
 
     ufw delete allow 80 &> /dev/null
-    { crontab -l; echo "0 2 * * * ufw allow 80 && certbot -q renew; ufw delete allow 80"; } | crontab -
+    echo "0 2 * * * ufw allow 80 && certbot -q renew; ufw delete allow 80" | crontab -
 }
 
 certificates() {
-    echo -e "${textcolor_light}Requesting a certificate...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Получение сертификата...${clear}"
+    info_message[2_ru]="${textcolor_light}Получение сертификата: 2-я попытка...${clear}"
+    info_message[1_en]="${textcolor_light}Requesting a certificate...${clear}"
+    info_message[2_en]="${textcolor_light}Requesting a certificate: 2nd attempt...${clear}"
 
-    if [[ "${validation_type}" == "1" ]]
+    echo -e "${info_message[1_$language]}"
+    warn_file=$(python3 -c "import os, CloudFlare; print(os.path.join(os.path.dirname(CloudFlare.__file__), 'warning_2_20.py'))")
+    [[ $(dpkg -s python3-cloudflare | grep -i '^version') =~ "2.20." ]] && sed -i 's/2\.20\./2\.25\./g' ${warn_file} &> /dev/null
+
+    if [[ "$validation_type" == "1" ]]
     then
         cert_dns_cf
     else
         cert_standalone
     fi
 
-    if [[ "${variant}" == "1" ]]
+    if [[ "$variant" == "1" ]]
     then
-        echo "renew_hook = systemctl reload nginx" >> /etc/letsencrypt/renewal/${domain}.conf
+        echo "renew_hook = systemctl reload nginx.service" >> /etc/letsencrypt/renewal/${domain}.conf
         echo ""
         openssl dhparam -out /etc/nginx/dhparam.pem 2048
     else
-        echo "renew_hook = cat /etc/letsencrypt/live/${domain}/fullchain.pem /etc/letsencrypt/live/${domain}/privkey.pem > /etc/haproxy/certs/${domain}.pem && systemctl reload haproxy" >> /etc/letsencrypt/renewal/${domain}.conf
+        echo "renew_hook = cat /etc/letsencrypt/live/${domain}/fullchain.pem /etc/letsencrypt/live/${domain}/privkey.pem > /etc/haproxy/certs/${domain}.pem && systemctl reload haproxy.service" >> /etc/letsencrypt/renewal/${domain}.conf
         echo ""
         openssl dhparam -out /etc/haproxy/dhparam.pem 2048
     fi
@@ -1121,14 +1014,19 @@ certificates() {
 }
 
 setup_warp() {
-    echo -e "${textcolor_light}Setting up WARP...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка WARP...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up WARP...${clear}"
+
+    echo -e "${info_message[1_$language]}"
+    warp-cli -V
+    echo ""
     yes | warp-cli registration new
     warp-cli mode proxy
     warp-cli proxy port 40000
     warp-cli connect
-    mkdir /etc/systemd/system/warp-svc.service.d
-    echo "[Service]" >> /etc/systemd/system/warp-svc.service.d/override.conf
-    echo "LogLevelMax=3" >> /etc/systemd/system/warp-svc.service.d/override.conf
+    mkdir -p /etc/systemd/system/warp-svc.service.d
+    echo -e "[Service]\nLogLevelMax=3\nCPUQuota=20%\nMemoryHigh=128M" >> /etc/systemd/system/warp-svc.service.d/override.conf
     systemctl daemon-reload
     systemctl restart warp-svc.service
     systemctl enable warp-svc.service
@@ -1136,48 +1034,40 @@ setup_warp() {
 }
 
 generate_pass() {
-    [ -z "$trjpass" ] && trjpass=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-    [ -z "$trojanpath" ] && [[ "${variant}" == "1" ]] && trojanpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-    [ -z "$uuid" ] && [[ "${variant}" == "1" ]] && uuid=$(cat /proc/sys/kernel/random/uuid)
-    [ -z "$vlesspath" ] && [[ "${variant}" == "1" ]] && vlesspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-    [ -z "$subspath" ] && subspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-    [ -z "$rulesetpath" ] && rulesetpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-    userkey=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 9)
+    [[ -z $trjpass ]] && trjpass=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $trojanpath ]] && [[ "$variant" == "1" ]] && trojanpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $uuid ]] && [[ "$variant" == "1" ]] && uuid=$(cat /proc/sys/kernel/random/uuid)
+    [[ -z $vlesspath ]] && [[ "$variant" == "1" ]] && vlesspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $subspath ]] && subspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $rulesetpath ]] && rulesetpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    user_key="1$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 9)"
 }
 
 download_rule_sets() {
-    mkdir /var/www/${rulesetpath}
+    mkdir -p /var/www/${rulesetpath}
     wget -P /var/www/${rulesetpath} https://raw.githubusercontent.com/FPPweb3/sb-rule-sets/main/torrent-clients.json
-    wget -P /var/www/${rulesetpath} https://github.com/SagerNet/sing-geoip/raw/rule-set/geoip-ru.srs
+    wget -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-ru.srs
 
-    for i in $(seq 0 $(expr $(jq ".route.rule_set | length" /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json) - 1))
+    for ruleset_ind in $(seq 0 $(jq '.route.rule_set | length - 1' /var/www/${subspath}/${user_key}-TRJ-CLIENT.json))
     do
-        ruleset_link=$(jq -r ".route.rule_set[${i}].url" /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json)
-        ruleset=${ruleset_link#"https://${domain}/${rulesetpath}/"}
-        if [[ "${ruleset}" == "geoip-ru.srs" ]] || [[ "${ruleset}" == "torrent-clients.json" ]]
-        then
-            continue
-        fi
-        wget -P /var/www/${rulesetpath} https://github.com/SagerNet/sing-geosite/raw/rule-set/${ruleset}
+        ruleset=$(jq -r ".route.rule_set[${ruleset_ind}].url" /var/www/${subspath}/${user_key}-TRJ-CLIENT.json | cut -d "/" -f 5)
+        [[ "$ruleset" == "geoip-ru.srs" || "$ruleset" == "torrent-clients.json" ]] && continue
+        wget -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset}
     done
 
-    for i in $(seq 0 $(expr $(jq ".route.rule_set | length" /etc/sing-box/config.json) - 1))
+    for ruleset_ind in $(seq 0 $(jq '.route.rule_set | length - 1' /etc/sing-box/config.json))
     do
-        ruleset_link=$(jq -r ".route.rule_set[${i}].path" /etc/sing-box/config.json)
-        ruleset=${ruleset_link#"/var/www/${rulesetpath}/"}
-        [ ! -f ${ruleset_link} ] && wget -P /var/www/${rulesetpath} https://github.com/SagerNet/sing-geosite/raw/rule-set/${ruleset}
+        ruleset=$(jq -r ".route.rule_set[${ruleset_ind}].path" /etc/sing-box/config.json | cut -d "/" -f 5)
+        [[ ! -f /var/www/${rulesetpath}/${ruleset} ]] && wget -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset}
     done
 
     chmod -R 755 /var/www/${rulesetpath}
     wget -O /usr/local/bin/rsupdate https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/ruleset-update.sh
     chmod +x /usr/local/bin/rsupdate
-    { crontab -l; echo "10 2 * * * /usr/local/bin/rsupdate"; } | crontab -
+    { echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"; crontab -l; echo "10 2 * * * rsupdate"; } | crontab -
 }
 
-server_config() {
-systemctl stop sing-box.service
-systemctl disable sing-box.service
-
+sb_server_config() {
 cat > /etc/sing-box/config.json <<EOF
 {
   "log": {
@@ -1211,7 +1101,7 @@ cat > /etc/sing-box/config.json <<EOF
       "listen_port": 10443,
       "users": [
         {
-          "name": "1${userkey}",
+          "name": "${user_key}",
           "password": "${trjpass}"
         }
       ],
@@ -1231,7 +1121,7 @@ cat > /etc/sing-box/config.json <<EOF
       "listen_port": 11443,
       "users": [
         {
-          "name": "1${userkey}",
+          "name": "${user_key}",
           "uuid": "${uuid}"
         }
       ],
@@ -1261,7 +1151,7 @@ cat > /etc/sing-box/config.json <<EOF
       "tag": "IPv4",
       "domain_resolver": {
         "server": "dns-main",
-        "strategy": "ipv4_only"
+        "strategy": "prefer_ipv4"
       }
     }
   ],
@@ -1287,14 +1177,13 @@ cat > /etc/sing-box/config.json <<EOF
           ".su",
           ".ru.com",
           ".ru.net",
-          "rutracker.org",
-          "rutracker.cc",
           "habr.com",
           "ntc.party",
           "canva.com"
         ],
         "domain_keyword": [
-          "xn--"
+          "xn--",
+          "rutracker"
         ],
         "rule_set": [
           "geoip-ru",
@@ -1371,31 +1260,10 @@ cat > /etc/sing-box/config.json <<EOF
   }
 }
 EOF
-
-if [[ "${transport}" == "2" ]]
-then
-    inboundnumbervl=$(jq '[.inbounds[].tag] | index("vless-in")' /etc/sing-box/config.json)
-    inboundnumbertr=$(jq '[.inbounds[].tag] | index("trojan-in")' /etc/sing-box/config.json)
-    echo "$(jq ".inbounds[${inboundnumbertr}].transport.type = \"httpupgrade\" | .inbounds[${inboundnumbervl}].transport.type = \"httpupgrade\"" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-fi
-
-if [[ "${variant}" != "1" ]]
-then
-    inboundnumbervl=$(jq '[.inbounds[].tag] | index("vless-in")' /etc/sing-box/config.json)
-    inboundnumbertr=$(jq '[.inbounds[].tag] | index("trojan-in")' /etc/sing-box/config.json)
-    echo "$(jq "del(.inbounds[${inboundnumbertr}].transport.type) | del(.inbounds[${inboundnumbertr}].transport.path) | del(.inbounds[${inboundnumbervl}])" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-fi
-
-download_rule_sets
-
-systemctl enable sing-box.service
-systemctl start sing-box.service
 }
 
-client_config() {
-mkdir /var/www/${subspath}
-
-cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
+sb_client_config() {
+cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
 {
   "log": {
     "level": "fatal",
@@ -1487,13 +1355,11 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
           "kaspersky",
           "stepik",
           "likee",
-          "snapchat",
           "yappy",
           "pikabu",
           "okko",
           "wink",
           "kion",
-          "roblox",
           "wildberries",
           "aliexpress"
         ],
@@ -1556,7 +1422,10 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
       "tag": "tun-in",
       "interface_name": "tun0",
       "stack": "system",
-      "address": "172.19.0.1/28",
+      "address": [
+        "172.19.0.1/28",
+        "fdfe:dcba:9876::1/126"
+      ],
       "auto_route": true,
       "strict_route": true,
       "sniff_override_destination": true
@@ -1581,17 +1450,18 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
           "fingerprint": "randomized"
         }
       },
-      "multiplex": {
-        "enabled": true,
-        "padding": true
-      },
       "transport": {
         "type": "ws",
         "path": "/${trojanpath}"
+      },
+      "multiplex": {
+        "enabled": true,
+        "padding": true
       }
     }
   ],
   "route": {
+    "auto_detect_interface": true,
     "rules": [
       {
         "action": "sniff"
@@ -1673,18 +1543,16 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
           "kaspersky",
           "stepik",
           "likee",
-          "snapchat",
           "yappy",
           "pikabu",
           "okko",
           "wink",
           "kion",
-          "roblox",
           "wildberries",
           "aliexpress"
         ],
         "ip_cidr": [
-          "${serverip}"
+          "${server_ip}"
         ],
         "rule_set": [
           "category-gov-ru",
@@ -2018,8 +1886,7 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
         "format": "binary",
         "url": "https://${domain}/${rulesetpath}/geosite-category-ads-all.srs"
       }
-    ],
-    "auto_detect_interface": true
+    ]
   },
   "experimental": {
     "cache_file": {
@@ -2028,78 +1895,82 @@ cat > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json <<EOF
   }
 }
 EOF
-
-if [[ "${transport}" == "2" ]]
-then
-    outboundnumber=$(jq '[.outbounds[].tag] | index("proxy")' /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json)
-    echo "$(jq ".outbounds[${outboundnumber}].transport.type = \"httpupgrade\"" /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json)" > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json
-fi
-
-if [[ "${variant}" == "1" ]]
-then
-    cp /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json /var/www/${subspath}/1${userkey}-VLESS-CLIENT.json
-    sed -i -e "s/$trjpass/$uuid/g" -e "s/$trojanpath/$vlesspath/g" -e 's/: "trojan"/: "vless"/g' -e 's/"password": /"uuid": /g' /var/www/${subspath}/1${userkey}-VLESS-CLIENT.json
-else
-    outboundnumber=$(jq '[.outbounds[].tag] | index("proxy")' /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json)
-    echo "$(jq "del(.outbounds[${outboundnumber}].transport.type) | del(.outbounds[${outboundnumber}].transport.path)" /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json)" > /var/www/${subspath}/1${userkey}-TRJ-CLIENT.json
-fi
 }
 
 setup_sing_box() {
-    echo -e "${textcolor_light}Setting up Sing-Box...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка Sing-Box...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up Sing-Box...${clear}"
+
+    echo -e "${info_message[1_$language]}"
     generate_pass
-    client_config
-    server_config
+    mkdir -p /var/www/${subspath}
+    sb_server_config
+    sb_client_config
+    outbound_num=$(jq '[.outbounds[].tag] | index("proxy")' /var/www/${subspath}/${user_key}-TRJ-CLIENT.json)
+
+    if [[ "$transport" == "2" ]]
+    then
+        echo "$(jq '.inbounds[].transport.type = "httpupgrade"' /etc/sing-box/config.json)" > /etc/sing-box/config.json
+        echo "$(jq ".outbounds[${outbound_num}].transport.type = \"httpupgrade\"" /var/www/${subspath}/${user_key}-TRJ-CLIENT.json)" > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json
+    fi
+
+    if [[ "$variant" == "1" ]]
+    then
+        echo "$(jq ".outbounds[${outbound_num}].type = \"vless\" | .outbounds[${outbound_num}] |= with_entries(.key |= if . == \"password\" then \"uuid\" else . end) | .outbounds[${outbound_num}].uuid = \"${uuid}\" | .outbounds[${outbound_num}].transport.path = \"/${vlesspath}\"" /var/www/${subspath}/${user_key}-TRJ-CLIENT.json)" > /var/www/${subspath}/${user_key}-VLESS-CLIENT.json
+    else
+        inbound_num_tr=$(jq '[.inbounds[].tag] | index("trojan-in")' /etc/sing-box/config.json)
+        inbound_num_vl=$(jq '[.inbounds[].tag] | index("vless-in")' /etc/sing-box/config.json)
+        echo "$(jq "del(.inbounds[${inbound_num_tr}].transport.type, .inbounds[${inbound_num_tr}].transport.path, .inbounds[${inbound_num_vl}])" /etc/sing-box/config.json)" > /etc/sing-box/config.json
+        echo "$(jq "del(.outbounds[${outbound_num}].transport.type, .outbounds[${outbound_num}].transport.path)" /var/www/${subspath}/${user_key}-TRJ-CLIENT.json)" > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json
+    fi
+
+    download_rule_sets
+    systemctl restart sing-box.service
+    systemctl enable sing-box.service
     echo ""
 }
 
 for_nginx_options() {
-    if [[ "${variant}" == "1" ]] && [[ "$option" != "2" ]] && [[ "$option" != "3" ]] && [[ "$option" != "4" ]]
+    if [[ "$variant" == "1" ]] && [[ ! $option =~ ^(2|3|4)$ ]]
     then
         touch /etc/nginx/.htpasswd
     fi
 
     if [[ "$option" == "3" ]]
     then
-        wget -P /var/www --mirror --convert-links --adjust-extension --page-requisites --no-parent https://${sitelink}
+        wget -P /var/www --mirror --convert-links --adjust-extension --page-requisites --no-parent https://${site_link}
+        site_dir_root=$(echo "${site_link}" | cut -d "/" -f 1)
+        chmod -R 755 /var/www/${site_dir_root}
         mkdir ./testdir
-        wget -q -P ./testdir https://${sitelink}
+        wget -q -P ./testdir https://${site_link}
         index=$(ls ./testdir)
         rm -rf ./testdir
-        sitedir=$(echo "${sitelink}" | cut -d "/" -f 1)
-        chmod -R 755 /var/www/${sitedir}
-        filelist=$(find /var/www/${sitedir} -name ${index})
-        slashnum=1000
 
-        for k in $(seq 1 $(echo "$filelist" | wc -l))
+        for search_name in "$index" '*.htm*'
         do
-            testfile=$(echo "$filelist" | sed -n "${k}p")
-            if [ $(echo "${testfile}" | tr -cd '/' | wc -c) -lt ${slashnum} ]
-            then
-                resultfile="${testfile}"
-                slashnum=$(echo "${testfile}" | tr -cd '/' | wc -c)
-            fi
+            index_path=$(find /var/www/${site_dir_root} -name "${search_name}" -type f -printf "%d %p\n" | sort -n | head -n 1 | cut -d " " -f 2-)
+            [[ -n $index_path ]] && [[ "$search_name" == "$index" ]] && break
+            index=$(echo "${index_path}" | rev | cut -d "/" -f 1 | rev)
         done
 
-        sitedir=${resultfile#"/var/www/"}
-        sitedir=${sitedir%"/${index}"}
+        site_dir=${index_path%"/${index}"}
+        site_dir=${site_dir#"/var/www/"}
         echo ""
     fi
 
     if [[ "$option" == "4" ]]
     then
-        sitedir=$(echo "${index}" | cut -d "/" -f 2)
-        mv /root/${sitedir} /var/www
-        chmod -R 755 /var/www/${sitedir}
-        sitedir=${index#"/"}
-        index=$(echo "${index}" | rev | cut -d "/" -f 1 | rev)
-        sitedir=${sitedir%"/${index}"}
+        site_dir_root=$(echo "${index_path}" | cut -d "/" -f 2)
+        mv -f /root/${site_dir_root} /var/www
+        chmod -R 755 /var/www/${site_dir_root}
+        index=$(echo "${index_path}" | rev | cut -d "/" -f 1 | rev)
+        site_dir=${index_path%"/${index}"}
+        site_dir=${site_dir#"/"}
     fi
 }
 
 nginx_config_1() {
-append='"~^(,[ \\t]*)*([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$" "$http_forwarded, $proxy_forwarded_elem"'
-
 cat > /etc/nginx/nginx.conf <<EOF
 user                 www-data;
 pid                  /run/nginx.pid;
@@ -2127,6 +1998,9 @@ http {
     keepalive_timeout         60s;
     keepalive_requests        1000;
     reset_timedout_connection on;
+
+    # Rate limit for the subscription path
+    limit_req_zone            \$binary_remote_addr zone=limit_sub:1m rate=60r/m;
 
     # MIME
     include                   mime.types;
@@ -2166,7 +2040,7 @@ http {
     map \$http_forwarded \$proxy_add_forwarded {
 
         # If the incoming Forwarded header is syntactically valid, append to it
-        ${append};
+        "${append}" "\$http_forwarded, \$proxy_forwarded_elem";
 
         # Otherwise, replace it
         default "\$proxy_forwarded_elem";
@@ -2192,8 +2066,8 @@ http {
         listen                               [::]:443 ssl;
         http2                                on;
         server_name                          ${domain} *.${domain};
-        ${comment1}${comment2}root                                 /var/www/${sitedir};
-        ${comment1}${comment2}index                                ${index};
+        ${comment_1}${comment_2}root                                 /var/www/${site_dir};
+        ${comment_1}${comment_2}index                                ${index};
 
         # SSL
         ssl_certificate                      /etc/letsencrypt/live/${domain}/fullchain.pem;
@@ -2217,14 +2091,15 @@ http {
         }
 
         # Main location
-        ${comment3}location / {
-            ${comment2}${comment3}auth_basic "Restricted Content";
-            ${comment2}${comment3}auth_basic_user_file /etc/nginx/.htpasswd;
-            ${comment1}${comment3}return 301 https://${redirect}\$request_uri;
-        ${comment3}}
+        ${comment_3}location / {
+            ${comment_2}${comment_3}auth_basic "Restricted Content";
+            ${comment_2}${comment_3}auth_basic_user_file /etc/nginx/.htpasswd;
+            ${comment_1}${comment_3}return 301 https://${redirect}\$request_uri;
+        ${comment_3}}
 
         # Subsciption
         location ~ ^/${subspath}/ {
+            limit_req zone=limit_sub burst=20 nodelay;
             default_type application/json;
             root /var/www;
         }
@@ -2235,40 +2110,25 @@ http {
             add_header Content-disposition "attachment";
         }
 
-        # Reverse proxy
+        # Trojan
         location = /${trojanpath} {
-            if (\$http_upgrade != "websocket") {
-                return 404;
-            }
-            proxy_pass                         http://127.0.0.1:10443;
-            proxy_set_header Host              \$host;
-            proxy_http_version                 1.1;
-            proxy_cache_bypass                 \$http_upgrade;
-
-            # Proxy SSL
-            proxy_ssl_server_name              on;
-
-            # Proxy headers
-            proxy_set_header Upgrade           \$http_upgrade;
-            proxy_set_header Connection        \$connection_upgrade;
-            proxy_set_header X-Real-IP         \$remote_addr;
-            proxy_set_header Forwarded         \$proxy_add_forwarded;
-            proxy_set_header X-Forwarded-For   \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-            proxy_set_header X-Forwarded-Host  \$host;
-            proxy_set_header X-Forwarded-Port  \$server_port;
-
-            # Proxy timeouts
-            proxy_connect_timeout              60s;
-            proxy_send_timeout                 60s;
-            proxy_read_timeout                 60s;
+            set \$ws_port 10443;
+            try_files "" @ws_proxy;
         }
 
+        # VLESS
         location = /${vlesspath} {
+            set \$ws_port 11443;
+            try_files "" @ws_proxy;
+        }
+
+        # Reverse proxy
+        location @ws_proxy {
             if (\$http_upgrade != "websocket") {
                 return 404;
             }
-            proxy_pass                         http://127.0.0.1:11443;
+
+            proxy_pass                         http://127.0.0.1:\$ws_port;
             proxy_set_header Host              \$host;
             proxy_http_version                 1.1;
             proxy_cache_bypass                 \$http_upgrade;
@@ -2332,6 +2192,9 @@ http {
     keepalive_requests        1000;
     reset_timedout_connection on;
 
+    # Rate limit for the subscription path
+    limit_req_zone            \$binary_remote_addr zone=limit_sub:1m rate=60r/m;
+
     # MIME
     include                   mime.types;
     default_type              application/octet-stream;
@@ -2344,8 +2207,8 @@ http {
     server {
         listen                               127.0.0.1:11443 default_server;
         server_name                          _;
-        ${comment1}${comment2}root                                 /var/www/${sitedir};
-        ${comment1}${comment2}index                                ${index};
+        ${comment_1}${comment_2}root                                 /var/www/${site_dir};
+        ${comment_1}${comment_2}index                                ${index};
 
         # Security headers
         add_header X-XSS-Protection          "1; mode=block" always;
@@ -2363,6 +2226,7 @@ http {
 
         # Subsciption
         location ~ ^/${subspath}/ {
+            limit_req zone=limit_sub burst=20 nodelay;
             default_type application/json;
             root /var/www;
         }
@@ -2385,31 +2249,32 @@ EOF
 }
 
 setup_nginx() {
-    echo -e "${textcolor_light}Setting up NGINX...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка NGINX...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up NGINX...${clear}"
+
+    echo -e "${info_message[1_$language]}"
     for_nginx_options
 
-    if [[ "${variant}" == "1" ]]
+    if [[ "$variant" == "1" ]]
     then
+        append='~^(,[ \\t]*)*([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'\''*+.^_`|~0-9A-Za-z-]+=([!#$%&'\''*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$'
         nginx_config_1
     else
         nginx_config_2
     fi
 
-    systemctl enable nginx
+    systemctl enable nginx.service
     nginx -t
-    systemctl restart nginx
+    systemctl restart nginx.service
     echo ""
 }
 
 auth_lua() {
-passhash=$(echo -n "${trjpass}" | openssl dgst -sha224 | sed 's/.* //')
-placeholder=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
-placeholderhash=$(echo -n "${placeholder}" | openssl dgst -sha224 | sed 's/.* //')
-
 cat > /etc/haproxy/auth.lua <<EOF
 local passwords = {
-    ["${passhash}"] = true,
-    ["${placeholderhash}"] = false        -- Placeholder (do not remove)
+    ["${pass_hash}"] = true,
+    ["${placeholder}"] = false        -- Placeholder (do not remove)
 }
 
 function trojan_auth(txn)
@@ -2431,10 +2296,7 @@ core.register_fetches("trojan_auth", trojan_auth)
 EOF
 }
 
-config_haproxy() {
-mkdir /etc/haproxy/certs
-cat /etc/letsencrypt/live/${domain}/fullchain.pem /etc/letsencrypt/live/${domain}/privkey.pem > /etc/haproxy/certs/${domain}.pem
-
+haproxy_config() {
 cat > /etc/haproxy/haproxy.cfg <<EOF
 global
         # Uncomment to enable system logging
@@ -2484,42 +2346,52 @@ frontend haproxy-tls
 
         # Backend rules
         use_backend reject if !{ ssl_fc_sni -i ${domain} } !{ ssl_fc_sni -m end .${domain} }
-        ${comment3}use_backend http-sub if { path_beg /${subspath}/ } || { path_beg /${rulesetpath}/ }
+        ${comment_3}use_backend http-sub if { path_beg /${subspath}/ } || { path_beg /${rulesetpath}/ }
         use_backend %[lua.trojan_auth]
-        default_backend http
+        default_backend http-main
 
 backend trojan
         mode tcp
         timeout server 1h
         server sing-box 127.0.0.1:10443
 
-backend http
+backend http-main
         mode http
         timeout server 1h
-        ${comment2}${comment3}http-request auth unless { http_auth(mycredentials) }
-        ${comment1}${comment3}http-request redirect code 301 location https://${redirect}%[capture.req.uri]
-        ${comment1}${comment2}server nginx 127.0.0.1:11443
+        ${comment_2}${comment_3}http-request auth unless { http_auth(mycredentials) }
+        ${comment_1}${comment_3}http-request redirect code 301 location https://${redirect}%[capture.req.uri]
+        ${comment_1}${comment_2}server nginx 127.0.0.1:11443
 
-${comment3}backend http-sub
-        ${comment3}mode http
-        ${comment3}timeout server 1h
-        ${comment3}server nginx 127.0.0.1:11443
+${comment_3}backend http-sub
+        ${comment_3}mode http
+        ${comment_3}timeout server 1h
+        ${comment_3}server nginx 127.0.0.1:11443
 
 backend reject
         mode http
         timeout server 1h
         http-request deny
 
-${comment2}${comment3}userlist mycredentials
+${comment_2}${comment_3}userlist mycredentials
 EOF
 }
 
 setup_haproxy() {
-    if [[ "${variant}" != "1" ]]
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка HAProxy...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up HAProxy...${clear}"
+
+    if [[ "$variant" != "1" ]]
     then
-        echo -e "${textcolor_light}Setting up HAProxy...${clear}"
+        echo -e "${info_message[1_$language]}"
+        pass_hash=$(echo -n "${trjpass}" | openssl dgst -sha224 | sed 's/.* //')
+        placeholder=$(openssl rand -hex 28)
         auth_lua
-        config_haproxy
+
+        mkdir -p /etc/haproxy/certs
+        cat /etc/letsencrypt/live/${domain}/fullchain.pem /etc/letsencrypt/live/${domain}/privkey.pem > /etc/haproxy/certs/${domain}.pem
+        haproxy_config
+
         systemctl enable haproxy.service
         haproxy -f /etc/haproxy/haproxy.cfg -c
         systemctl restart haproxy.service
@@ -2528,155 +2400,128 @@ setup_haproxy() {
 }
 
 add_sbmanager() {
-    echo -e "${textcolor_light}Adding settings menu...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Добавление меню настроек...${clear}"
+    info_message[1_en]="${textcolor_light}Adding settings menu...${clear}"
 
-    if [[ "${language}" == "1" ]]
-    then
-        sbmanager_file="sb-manager-ru.sh"
-    else
-        sbmanager_file="sb-manager-en.sh"
-    fi
-
-    wget -O /usr/local/bin/sbmanager https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/${sbmanager_file}
+    echo -e "${info_message[1_$language]}"
+    wget -O /usr/local/bin/sbmanager https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/sb-manager.sh
     chmod +x /usr/local/bin/sbmanager
     echo "alias ssb='/usr/local/bin/sbmanager'" >> /etc/bash.bashrc
 }
 
 add_sub_page() {
-    echo -e "${textcolor_light}Adding subscription page...${clear}"
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Добавление страницы подписок...${clear}"
+    info_message[1_en]="${textcolor_light}Adding subscription page...${clear}"
 
-    if [[ "${variant}" == "1" ]] && [[ "${language}" == "1" ]]
-    then
-        sub_page_file="sub-ru.html"
-    elif [[ "${variant}" == "1" ]] && [[ "${language}" != "1" ]]
-    then
-        sub_page_file="sub-en.html"
-    elif [[ "${variant}" != "1" ]] && [[ "${language}" == "1" ]]
-    then
-        sub_page_file="sub-ru-hapr.html"
-    else
-        sub_page_file="sub-en-hapr.html"
-    fi
-
-    wget -O /var/www/${subspath}/sub.html https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Subscription-Page/${sub_page_file}
-    wget -O /var/www/${subspath}/background.jpg https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Subscription-Page/background.jpg
-    sed -i -e "s/DOMAIN/$domain/g" -e "s/SUBSCRIPTION-PATH/$subspath/g" /var/www/${subspath}/sub.html
+    echo -e "${info_message[1_$language]}"
+    data_vrnt="both"
+    [[ "$variant" != "1" ]] && data_vrnt="novless"
+    wget -P /var/www/${subspath} https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Subscription-Page/sub.html
+    wget -P /var/www/${subspath} https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Subscription-Page/background.jpg
+    sed -i -e "s/DOMAIN/${domain}/g" -e "s/SUBSCRIPTION-PATH/${subspath}/g" -e "s/html lang=\"en\" data-vrnt=\"both\"/html lang=\"${language}\" data-vrnt=\"${data_vrnt}\"/g" /var/www/${subspath}/sub.html
 }
 
-final_message_ru() {
+final_text_ru() {
+    echo ""
+    echo ""
     echo -e "${textcolor}Если выше не возникло ошибок, то настройка завершена! Сохраните текст внизу!${clear}"
     echo ""
-    if [[ "${sshufw}" != "2" ]]
+    if [[ "$ssh_ufw" != "2" ]]
     then
         echo -e "${red}ВНИМАНИЕ!${clear}"
         echo "Для повышения безопасности сервера рекомендуется выполнить следующие действия:"
-        echo -e "1) Отключиться от сервера ${textcolor}Ctrl + D${clear}"
+        echo -e "1) Отключиться от сервера, нажав ${textcolor}Ctrl + D${clear}"
         echo -e "2) Если нет ключей SSH, то сгенерировать их на своём ПК командой ${textcolor}ssh-keygen -t rsa -b 4096${clear}"
         echo "3) Отправить публичный ключ на сервер"
-        echo -e "   Команда для Linux и macOS: ${textcolor}ssh-copy-id -p ${sshp} ${username}@${serverip}${clear}"
-        echo -e "   Команда для Windows: ${textcolor}type \$env:USERPROFILE\.ssh\id_rsa.pub | ssh -p ${sshp} ${username}@${serverip} \"cat >> ~/.ssh/authorized_keys\"${clear}"
-        echo -e "4) Подключиться к серверу ещё раз командой ${textcolor}ssh -p ${sshp} ${username}@${serverip}${clear}"
+        echo -e "   Команда для Linux и macOS: ${textcolor}ssh-copy-id -p ${ssh_port} ${username}@${server_ip}${clear}"
+        echo -e "   Команда для Windows: ${textcolor}type \$env:USERPROFILE\.ssh\id_rsa.pub | ssh -p ${ssh_port} ${username}@${server_ip} \"cat >> ~/.ssh/authorized_keys\"${clear}"
+        echo -e "4) Подключиться к серверу ещё раз командой ${textcolor}ssh -p ${ssh_port} ${username}@${server_ip}${clear}"
         echo -e "5) Отключить вход по паролю командой ${textcolor}sudo sed -i \"s/.*PasswordAuthentication yes.*/PasswordAuthentication no/g\" /etc/ssh/sshd_config${clear}"
         echo -e "6) Перезапустить SSH командой ${textcolor}sudo systemctl restart ssh.service${clear}"
     else
         echo -e "${red}ВНИМАНИЕ!${clear}"
-        echo "Вы пропустили настройку безопасности"
-        echo "Настоятельно рекомендуется почитать о безопасности сервера и выполнить настройку самостоятельно"
-        echo "При этом порты 443 и SSH нужно оставить открытыми"
+        echo "Вы пропустили настройку безопасности, настоятельно рекомендуется выполнить её самостоятельно"
+        echo "При этом порты 443 и SSH нужно оставить открытыми для TCP"
     fi
     echo ""
     echo -e "${red}ВАЖНО:${clear}"
     echo -e "Для начала работы прокси может потребоваться перезагрузка сервера командой ${textcolor}sudo reboot${clear}"
-    if [[ "${variant}" == "1" ]]
+    if [[ "$variant" == "1" ]]
     then
         echo ""
         echo -e "${textcolor}Конфиги для клиента доступны по ссылкам:${clear}"
-        echo "https://${domain}/${subspath}/1${userkey}-TRJ-CLIENT.json"
-        echo "https://${domain}/${subspath}/1${userkey}-VLESS-CLIENT.json"
-        echo ""
-        echo -e "${textcolor}Страница выдачи подписок пользователей:${clear}"
-        echo "https://${domain}/${subspath}/sub.html"
-        echo -e "Ваше имя пользователя - ${textcolor}1${userkey}${clear}"
+        echo "https://${domain}/${subspath}/${user_key}-TRJ-CLIENT.json"
+        echo "https://${domain}/${subspath}/${user_key}-VLESS-CLIENT.json"
     else
         echo "Чтобы этот вариант настройки работал, проксирование через CDN должно быть отключено"
         echo ""
         echo -e "${textcolor}Конфиг для клиента доступен по ссылке:${clear}"
-        echo "https://${domain}/${subspath}/1${userkey}-TRJ-CLIENT.json"
-        echo ""
-        echo -e "${textcolor}Страница выдачи подписок пользователей:${clear}"
-        echo "https://${domain}/${subspath}/sub.html"
-        echo -e "Ваше имя пользователя - ${textcolor}1${userkey}${clear}"
+        echo "https://${domain}/${subspath}/${user_key}-TRJ-CLIENT.json"
     fi
+    echo ""
+    echo -e "${textcolor}Страница выдачи подписок пользователей:${clear}"
+    echo "https://${domain}/${subspath}/sub.html"
+    echo -e "Ваше имя пользователя - ${textcolor}${user_key}${clear}"
     echo ""
     echo -e "Для вывода меню настроек используйте команду ${textcolor}ssb${clear}"
-    if [ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]
+    if [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]
     then
         echo ""
-        echo -e "${red}Ошибка: сертификат не выпущен, введите команду \"ssb\" и выберите пункт 11 или 12${clear}"
+        echo -e "${red}Ошибка: не удалось выпустить сертификат, введите команду \"ssb\" и выберите пункт 11 или 12${clear}"
     fi
+    echo ""
+    echo ""
 }
 
-final_message_en() {
+final_text_en() {
+    echo ""
+    echo ""
     echo -e "${textcolor}If there are no errors above then the setup is complete! Save the text below!${clear}"
     echo ""
-    if [[ "${sshufw}" != "2" ]]
+    if [[ "$ssh_ufw" != "2" ]]
     then
         echo -e "${red}ATTENTION!${clear}"
         echo "To increase the security of the server it's recommended to do the following:"
         echo -e "1) Disconnect from the server by pressing ${textcolor}Ctrl + D${clear}"
         echo -e "2) If you don't have SSH keys then generate them on your PC (${textcolor}ssh-keygen -t rsa -b 4096${clear})"
         echo "3) Send the public key to the server"
-        echo -e "   Command for Linux and macOS: ${textcolor}ssh-copy-id -p ${sshp} ${username}@${serverip}${clear}"
-        echo -e "   Command for Windows: ${textcolor}type \$env:USERPROFILE\.ssh\id_rsa.pub | ssh -p ${sshp} ${username}@${serverip} \"cat >> ~/.ssh/authorized_keys\"${clear}"
-        echo -e "4) Connect to the server again (${textcolor}ssh -p ${sshp} ${username}@${serverip}${clear})"
+        echo -e "   Command for Linux and macOS: ${textcolor}ssh-copy-id -p ${ssh_port} ${username}@${server_ip}${clear}"
+        echo -e "   Command for Windows: ${textcolor}type \$env:USERPROFILE\.ssh\id_rsa.pub | ssh -p ${ssh_port} ${username}@${server_ip} \"cat >> ~/.ssh/authorized_keys\"${clear}"
+        echo -e "4) Connect to the server again (${textcolor}ssh -p ${ssh_port} ${username}@${server_ip}${clear})"
         echo -e "5) Disable password authentication (${textcolor}sudo sed -i \"s/.*PasswordAuthentication yes.*/PasswordAuthentication no/g\" /etc/ssh/sshd_config${clear})"
         echo -e "6) Restart SSH (${textcolor}sudo systemctl restart ssh.service${clear})"
     else
         echo -e "${red}ATTENTION!${clear}"
-        echo "You have skipped security setup"
-        echo "It is highly recommended to find information about server security and to configure it yourself"
-        echo "Ports 443 and SSH must be left open"
+        echo "You have skipped security setup, it is highly recommended to configure it yourself"
+        echo "Ports 443 and SSH must be left open for TCP"
     fi
     echo ""
     echo -e "${red}IMPORTANT:${clear}"
     echo -e "It might be required to reboot the server for the proxy to start working (${textcolor}sudo reboot${clear})"
-    if [[ "${variant}" == "1" ]]
+    if [[ "$variant" == "1" ]]
     then
         echo ""
         echo -e "${textcolor}Client configs are available here:${clear}"
-        echo "https://${domain}/${subspath}/1${userkey}-TRJ-CLIENT.json"
-        echo "https://${domain}/${subspath}/1${userkey}-VLESS-CLIENT.json"
-        echo ""
-        echo -e "${textcolor}Subscription page:${clear}"
-        echo "https://${domain}/${subspath}/sub.html"
-        echo -e "Your username is ${textcolor}1${userkey}${clear}"
+        echo "https://${domain}/${subspath}/${user_key}-TRJ-CLIENT.json"
+        echo "https://${domain}/${subspath}/${user_key}-VLESS-CLIENT.json"
     else
         echo "For this setup method to work, the traffic should not be proxied through CDN"
         echo ""
         echo -e "${textcolor}Client config is available here:${clear}"
-        echo "https://${domain}/${subspath}/1${userkey}-TRJ-CLIENT.json"
-        echo ""
-        echo -e "${textcolor}Subscription page:${clear}"
-        echo "https://${domain}/${subspath}/sub.html"
-        echo -e "Your username is ${textcolor}1${userkey}${clear}"
+        echo "https://${domain}/${subspath}/${user_key}-TRJ-CLIENT.json"
     fi
+    echo ""
+    echo -e "${textcolor}Subscription page:${clear}"
+    echo "https://${domain}/${subspath}/sub.html"
+    echo -e "Your username is ${textcolor}${user_key}${clear}"
     echo ""
     echo -e "To display the settings menu, run ${textcolor}ssb${clear} command"
-    if [ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]
+    if [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]
     then
         echo ""
-        echo -e "${red}Error: certificate has not been issued, enter \"ssb\" command and select option 11 or 12${clear}"
-    fi
-}
-
-final_message() {
-    echo ""
-    echo ""
-    if [[ "${language}" == "1" ]]
-    then
-        final_message_ru
-    else
-        final_message_en
+        echo -e "${red}Error: failed to issue the certificate, enter \"ssb\" command and select option 11 or 12${clear}"
     fi
     echo ""
     echo ""
@@ -2685,15 +2530,14 @@ final_message() {
 check_os
 check_root
 check_sbmanager
-get_ip
 banner
 enter_language
-start_message
-check_if_updated
-enter_data
+start_text_${language}
+get_ip
+enter_data_${language}
 enable_bbr
 install_packages
-setup_security
+setup_general_security
 certificates
 setup_warp
 setup_sing_box
@@ -2701,4 +2545,4 @@ setup_nginx
 setup_haproxy
 add_sbmanager
 add_sub_page
-final_message
+final_text_${language}

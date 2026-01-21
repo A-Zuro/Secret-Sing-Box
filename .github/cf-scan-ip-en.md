@@ -10,9 +10,9 @@ We will use the **CloudflareScanner** tool to test latency and download speed fo
 
 ### Usage on Windows
 
-1. Download the executable file from the [release page](https://github.com/Ptechgithub/CloudflareScanner/releases/latest) and extract it.
-2. Run the `CloudflareScanner.exe` file and wait for the test to complete.
-3. After completion, the 10 fastest IP addresses with latency and download speed details will be displayed.
+1) Download the executable file from the [release page](https://github.com/Ptechgithub/CloudflareScanner/releases/latest) and extract it.
+2) Run the `CloudflareScanner.exe` file and wait for the test to complete.
+3) After completion, the 10 fastest IP addresses with latency and download speed details will be displayed.
 
 ### Usage on Linux
 
@@ -21,7 +21,7 @@ Use the commands below to:
 - Download the latest release for your architecture.
 - Extract the archive, make the file executable, and run CloudflareScanner.
 
-```bash
+```
 ARCH=$(uname -m); case $ARCH in x86_64) FILE="CloudflareScanner_linux-amd64.zip";; aarch64|arm64) FILE="CloudflareScanner_linux-arm64.zip";; armv7l) FILE="CloudflareScanner_linux-arm7.zip";; mips64) FILE="CloudflareScanner_linux-mips64.zip";; mips64le) FILE="CloudflareScanner_linux-mips64le.zip";; riscv64) FILE="CloudflareScanner_linux-riscv64.zip";; *) echo "Unsupported architecture: $ARCH"; exit 1;; esac
 wget "https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/$FILE"
 unzip "$FILE" -d CloudflareScanner && cd CloudflareScanner
@@ -31,7 +31,7 @@ chmod +x CloudflareScanner
 
 For subsequent runs, use:
 
-```bash
+```
 cd CloudflareScanner && ./CloudflareScanner
 ```
 
@@ -39,15 +39,15 @@ cd CloudflareScanner && ./CloudflareScanner
 
 Follow these steps to run the tool on macOS:
 
-1. Download the file corresponding to your CPU:
+1) Download the file corresponding to your CPU:
    - **`CloudflareScanner_darwin-arm64.zip`** — for Macs with Apple Silicon (M1, M2, and newer).
    - **`CloudflareScanner_darwin-amd64.zip`** — for Intel-based Macs.
 
-2. Extract the downloaded archive to a convenient location, such as the `Downloads` folder.
+2) Extract the downloaded archive to a convenient location, such as the `Downloads` folder.
 
-3. Open the terminal and execute these commands:
+3) Open the terminal and execute these commands:
 
-```bash
+```
 cd ~/Downloads/CloudflareScanner_darwin-arm64
 chmod +x CloudflareScanner
 ./CloudflareScanner
@@ -55,7 +55,7 @@ chmod +x CloudflareScanner
 
 For subsequent runs, use:
 
-```bash
+```
 cd ~/Downloads/CloudflareScanner_darwin-arm64 && ./CloudflareScanner
 ```
 
@@ -67,7 +67,7 @@ Then open the app and use the commands below to:
 - Download the latest release for Android.
 - Extract the archive, make the file executable, and run CloudflareScanner.
 
-```bash
+```
 pkg install wget -y
 wget "https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/CloudflareScanner_android-arm64.zip"
 unzip "CloudflareScanner_android-arm64.zip" -d CloudflareScanner && cd CloudflareScanner
@@ -77,7 +77,7 @@ chmod +x CloudflareScanner
 
 For subsequent runs, use:
 
-```bash
+```
 cd CloudflareScanner && ./CloudflareScanner
 ```
 

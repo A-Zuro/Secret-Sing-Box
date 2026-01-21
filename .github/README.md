@@ -1,7 +1,7 @@
 <div align="center">
     <img src="https://github.com/user-attachments/assets/1b2ec02b-6bf6-4c62-b8e3-bfba4aaafd93" alt="SSB Logo" width="325" height="auto">
     <h1>SECRET SING-BOX</h1>
-    Русский | <a href="https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README-EN.md">English</a><br><br>
+    Русский | <a href="README-EN.md">English</a><br><br>
 </div>
 
 ### Простая настройка прокси с терминированием TLS на NGINX или HAProxy
@@ -18,7 +18,7 @@
 Оба варианта настройки делают невозможным обнаружение Sing-Box снаружи, что повышает уровень безопасности.
 
 > [!IMPORTANT]
-> Рекомендуемая ОС для сервера: Debian 11/12 или Ubuntu 22.04/24.04. Достаточно 512 Мб оперативной памяти, 5 Гб на диске и 1 ядра процессора. Для настройки понадобится IPv4 на сервере и свой домен ([Как настроить?](https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-ru.md)). Запускайте от имени root на чистой системе. Нужно обновить систему и перезагрузить сервер перед запуском скрипта.
+> Поддерживаемые ОС для сервера: Debian 11/12/13 или Ubuntu 22.04/24.04. Достаточно 512 Мб оперативной памяти, 5 Гб на диске и 1 ядра процессора. Для настройки понадобится IPv4 на сервере и свой домен/поддомен ([Как настроить?](cf-settings-ru.md)). Запускайте от имени root на чистой системе. Нужно обновить систему и перезагрузить сервер перед запуском скрипта.
 
 > [!NOTE]
 > С правилами маршрутизации для России. Открытые порты на сервере: 443 и SSH.
@@ -37,7 +37,7 @@
 9) Возможность настраивать на клиенте подключение к выбранному IP Cloudflare
 10) Клиентские конфиги Sing-Box с правилами маршрутизации для России
 11) Автоматизированное управление конфигами пользователей
-12) Страницу для удобной выдачи подписок ([пример](https://a-zuro.github.io/Secret-Sing-Box/sub-ru.html))
+12) Страницу для удобной выдачи подписок ([пример](https://a-zuro.github.io/Secret-Sing-Box/sub.html#ru))
 
 ### Настройка сервера:
 
@@ -70,7 +70,7 @@ ssb
 
 Пункт 5 синхронизирует настройки в клиентских конфигах всех пользователей, что позволяет не редактировать конфиг каждого пользователя отдельно:
 
-5.1. Синхронизирует настройки с [шаблоном на GitHub](https://github.com/A-Zuro/Secret-Sing-Box/blob/main/Config-Templates/client.json).
+5.1. Синхронизирует настройки с [шаблоном на GitHub](../Config-Templates/client.json).
 
 5.2. Синхронизирует настройки с локальным шаблоном, позволяет настраивать свои правила в клиентских конфигах. При добавлении в конфиги новых наборов правил (rule sets) с помощью этого пункта, они будут автоматически загружены на сервер, если это наборы правил от [SagerNet](https://github.com/SagerNet/sing-geosite/tree/rule-set).
 
@@ -88,13 +88,13 @@ warp-cli registration license CMD5m479-Y5hS6y79-U06c5mq9
 >
 > На некоторых устройствах может не работать "stack": "system" в настройках tun-интерфейса в клиентских конфигах. В таких случаях рекомендуется заменить его на "gvisor" с помощью пункта 4 в меню настроек (см. выше).
 
-[Android, iOS и macOS](https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/Sing-Box-Android-iOS-ru.md). Инструкция дана для Android, на iOS и macOS интерфейс приложения отличается, но настройки аналогичны.
+[Android, iOS и macOS](Sing-Box-Android-iOS-ru.md). Инструкция дана для Android, на iOS и macOS интерфейс приложения отличается, но настройки аналогичны.
 
-[Windows](https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/Sing-Box-Windows-ru.md). Данный способ включает настройку чистого ядра Sing-Box и не имеет графичекого интерфейса.
+[Windows](Sing-Box-Windows-ru.md). Данный способ включает настройку чистого ядра Sing-Box и не имеет графичекого интерфейса.
 
-[Linux](https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README.md#%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D0%BA%D0%BB%D0%B8%D0%B5%D0%BD%D1%82%D0%BE%D0%B2). Запустите команду ниже и следуйте инструкциям (для дистрибутивов на основе Debian).
+[Linux](#настройка-клиентов). Запустите команду ниже и следуйте инструкциям (для дистрибутивов на основе Debian).
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/sb-pc-linux-ru.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/sb-pc-linux.sh)
 ```
 
 ### Звёзды по времени:

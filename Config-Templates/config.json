@@ -30,7 +30,7 @@
       "listen_port": 10443,
       "users": [
         {
-          "name": "user",
+          "name": "USERNAME",
           "password": "TROJAN-PASSWORD"
         }
       ],
@@ -50,7 +50,7 @@
       "listen_port": 11443,
       "users": [
         {
-          "name": "user",
+          "name": "USERNAME",
           "uuid": "VLESS-UUID"
         }
       ],
@@ -80,7 +80,7 @@
       "tag": "IPv4",
       "domain_resolver": {
         "server": "dns-main",
-        "strategy": "ipv4_only"
+        "strategy": "prefer_ipv4"
       }
     }
   ],
@@ -106,14 +106,13 @@
           ".su",
           ".ru.com",
           ".ru.net",
-          "rutracker.org",
-          "rutracker.cc",
           "habr.com",
           "ntc.party",
           "canva.com"
         ],
         "domain_keyword": [
-          "xn--"
+          "xn--",
+          "rutracker"
         ],
         "rule_set": [
           "geoip-ru",
