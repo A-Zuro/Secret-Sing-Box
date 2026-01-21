@@ -1744,7 +1744,7 @@ update_ssb() {
 
     if [[ $update_script =~ '#!/bin/bash' ]]
     then
-        export version="1.4.0" language
+        export version="1.4.1" language
         export -f get_ip templates get_data check_users check_github_template get_pass edit_configs_loop add_rule_sets_loop sync_client_configs_main
         bash <(echo "${update_script}")
         exit 0
