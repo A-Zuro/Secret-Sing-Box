@@ -64,7 +64,7 @@ install_sing_box() {
     general_message[5_en]="It can be updated with ${textcolor}apt-get install sing-box -y${clear} command"
     general_message[6_en]="${red}Error: failed to install Sing-Box, try again later${clear}"
 
-    [[ ! -f /usr/local/bin/proxylist ]] && touch /usr/local/bin/proxylist
+    touch /usr/local/bin/proxylist
 
     if ! sing-box version &> /dev/null
     then
@@ -191,59 +191,54 @@ enter_proxy_data_add() {
 }
 
 client_script_add() {
-cat > /usr/local/bin/${new_comm} <<EOF
-#!/bin/bash
-
-textcolor='\033[1;36m'
-red='\033[1;31m'
-clear='\033[0m'
-
-if [[ \$EUID -ne 0 ]]
-then
-    echo ""
-    echo -e "${general_message[1_$language]}"
-    echo ""
-    exit 1
-fi
-
-echo ""
-echo -e "${general_message[2_$language]}"
-echo "${general_message[3_$language]}"
-echo -e "${general_message[4_$language]}"
-echo ""
-
-wget -q -O /etc/sing-box/config.json.1 ${link} && mv -f /etc/sing-box/config.json.1 /etc/sing-box/config.json
-sing-box run -c /etc/sing-box/config.json
-EOF
-}
-
-manage_client_script_add() {
     declare -A -g info_message=()
-    info_message[1_ru]="Команда ${textcolor}${new_comm}${clear} добавлена в /usr/local/bin/, используйте её для подключения к прокси"
-    info_message[1_en]="The command ${textcolor}${new_comm}${clear} has been added to /usr/local/bin/, use it to connect to the proxy"
+    info_message[1_ru]='${red}Ошибка: эту команду нужно запускать с sudo или от имени root${clear}'
+    info_message[2_ru]='${textcolor}Sing-Box запущен${clear}'
+    info_message[3_ru]='Не закрывайте это окно, пока Sing-Box работает'
+    info_message[4_ru]='Нажмите ${textcolor}Ctrl + C${clear}, чтобы отключиться'
+    info_message[5_ru]="Команда ${textcolor}${new_comm}${clear} добавлена в /usr/local/bin/, используйте её для подключения к прокси"
+    info_message[1_en]='${red}Error: this command should be run with sudo or as root${clear}'
+    info_message[2_en]='${textcolor}Started Sing-Box${clear}'
+    info_message[3_en]='Do not close this window while Sing-Box is running'
+    info_message[4_en]='Press ${textcolor}Ctrl + C${clear} to disconnect'
+    info_message[5_en]="The command ${textcolor}${new_comm}${clear} has been added to /usr/local/bin/, use it to connect to the proxy"
+
+	cat > /usr/local/bin/${new_comm} <<-EOF
+	#!/bin/bash
+
+	textcolor='\033[1;36m'
+	red='\033[1;31m'
+	clear='\033[0m'
+
+	if [[ \$EUID -ne 0 ]]
+	then
+	    echo ""
+	    echo -e "${info_message[1_$language]}"
+	    echo ""
+	    exit 1
+	fi
+
+	echo ""
+	echo -e "${info_message[2_$language]}"
+	echo "${info_message[3_$language]}"
+	echo -e "${info_message[4_$language]}"
+	echo ""
+
+	wget -q -O /etc/sing-box/config.json.1 ${link} && mv -f /etc/sing-box/config.json.1 /etc/sing-box/config.json
+	sing-box run -c /etc/sing-box/config.json
+	EOF
 
     chmod +x /usr/local/bin/${new_comm}
     echo "#${new_comm}" >> /usr/local/bin/proxylist
-    echo -e "${info_message[1_$language]}"
+    echo -e "${info_message[5_$language]}"
     echo ""
 }
 
 add_proxies() {
-    declare -A -g general_message=()
-    general_message[1_ru]='${red}Ошибка: эту команду нужно запускать с sudo или от имени root${clear}'
-    general_message[2_ru]='${textcolor}Sing-Box запущен${clear}'
-    general_message[3_ru]='Не закрывайте это окно, пока Sing-Box работает'
-    general_message[4_ru]='Нажмите ${textcolor}Ctrl + C${clear}, чтобы отключиться'
-    general_message[1_en]='${red}Error: this command should be run with sudo or as root${clear}'
-    general_message[2_en]='${textcolor}Started Sing-Box${clear}'
-    general_message[3_en]='Do not close this window while Sing-Box is running'
-    general_message[4_en]='Press ${textcolor}Ctrl + C${clear} to disconnect'
-
     while [[ ! ${link,,} =~ ^(x|х)$ ]]
     do
         enter_proxy_data_add
         client_script_add
-        manage_client_script_add
     done
 }
 
@@ -290,7 +285,7 @@ enter_proxy_data_del() {
     check_command_del
 }
 
-manage_client_script_del() {
+client_script_del() {
     declare -A -g info_message=()
     info_message[1_ru]="Команда ${textcolor}${del_comm}${clear} удалена из /usr/local/bin/"
     info_message[1_en]="The command ${textcolor}${del_comm}${clear} has been deleted from /usr/local/bin/"
@@ -305,7 +300,7 @@ delete_proxies() {
     while [[ ! ${del_comm,,} =~ ^(x|х)$ ]]
     do
         enter_proxy_data_del
-        manage_client_script_del
+        client_script_del
     done
 }
 

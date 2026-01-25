@@ -113,15 +113,6 @@
           "duckduckgo",
           "yahoo",
           "mozilla",
-          "samsung",
-          "huawei",
-          "apple",
-          "nvidia",
-          "xiaomi",
-          "hp",
-          "asus",
-          "lenovo",
-          "lg",
           "oracle",
           "adobe",
           "blender",
@@ -137,7 +128,6 @@
           "clarivate",
           "sci-hub",
           "duolingo",
-          "aljazeera",
           "torrent-clients"
         ],
         "server": "dns-local"
@@ -304,15 +294,6 @@
           "duckduckgo",
           "yahoo",
           "mozilla",
-          "samsung",
-          "huawei",
-          "apple",
-          "nvidia",
-          "xiaomi",
-          "hp",
-          "asus",
-          "lenovo",
-          "lg",
           "oracle",
           "adobe",
           "blender",
@@ -328,7 +309,6 @@
           "clarivate",
           "sci-hub",
           "duolingo",
-          "aljazeera",
           "torrent-clients"
         ],
         "outbound": "direct"
@@ -466,60 +446,6 @@
         "url": "https://DOMAIN/RULESETPATH/geosite-mozilla.srs"
       },
       {
-        "tag": "samsung",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-samsung.srs"
-      },
-      {
-        "tag": "huawei",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-huawei.srs"
-      },
-      {
-        "tag": "apple",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-apple.srs"
-      },
-      {
-        "tag": "nvidia",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-nvidia.srs"
-      },
-      {
-        "tag": "xiaomi",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-xiaomi.srs"
-      },
-      {
-        "tag": "hp",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-hp.srs"
-      },
-      {
-        "tag": "asus",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-asus.srs"
-      },
-      {
-        "tag": "lenovo",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-lenovo.srs"
-      },
-      {
-        "tag": "lg",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-lg.srs"
-      },
-      {
         "tag": "oracle",
         "type": "remote",
         "format": "binary",
@@ -608,12 +534,6 @@
         "type": "remote",
         "format": "binary",
         "url": "https://DOMAIN/RULESETPATH/geosite-duolingo.srs"
-      },
-      {
-        "tag": "aljazeera",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-aljazeera.srs"
       },
       {
         "tag": "category-ads-all",

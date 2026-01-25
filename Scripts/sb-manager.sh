@@ -1622,13 +1622,14 @@ disable_ipv6() {
     info_message[1_ru]="${textcolor}IPv6 отключён:${clear}"
     info_message[1_en]="${textcolor}IPv6 is disabled:${clear}"
 
-    grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-    grep -q "net.ipv6.conf.default.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-    grep -q "net.ipv6.conf.lo.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+    for sysctl_entry in 'net.ipv6.conf.all.disable_ipv6 = 1' 'net.ipv6.conf.default.disable_ipv6 = 1' 'net.ipv6.conf.lo.disable_ipv6 = 1'
+    do
+        grep -q "${sysctl_entry}" /etc/sysctl.d/99-ssb.conf &> /dev/null || echo "${sysctl_entry}" >> /etc/sysctl.d/99-ssb.conf
+    done
 
     echo -e "${info_message[1_$language]}"
-    sysctl -p
-    [[ ! $(crontab -l) =~ "@reboot sysctl -p" ]] && { crontab -l; echo "@reboot sysctl -p"; } | crontab -
+    sysctl --system &> /dev/null
+    sysctl net.ipv6.conf.all.disable_ipv6 net.ipv6.conf.default.disable_ipv6 net.ipv6.conf.lo.disable_ipv6
     echo ""
     main_menu
 }
@@ -1644,10 +1645,14 @@ enable_ipv6() {
     info_message[2_en]="${red}ATTENTION!${clear}"
     info_message[3_en]="To apply the new settings, it is recommended to reboot the server with ${textcolor}reboot${clear} command"
 
-    sed -i -e "/net.ipv6.conf.all.disable_ipv6 = 1/d" -e "/net.ipv6.conf.default.disable_ipv6 = 1/d" -e "/net.ipv6.conf.lo.disable_ipv6 = 1/d" /etc/sysctl.conf
+    for sysctl_file in '/etc/sysctl.d/99-ssb.conf' '/etc/sysctl.conf'
+    do
+        sed -i -e "/net.ipv6.conf.all.disable_ipv6 = 1/d" -e "/net.ipv6.conf.default.disable_ipv6 = 1/d" -e "/net.ipv6.conf.lo.disable_ipv6 = 1/d" ${sysctl_file} &> /dev/null
+    done
+
     echo -e "${info_message[1_$language]}"
-    sysctl -p
-    [[ $(crontab -l) =~ "@reboot sysctl -p" ]] && crontab -l | sed "/@reboot sysctl -p/d" | crontab -
+    sysctl --system &> /dev/null
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0 -w net.ipv6.conf.default.disable_ipv6=0 -w net.ipv6.conf.lo.disable_ipv6=0
     echo ""
     echo -e "${info_message[2_$language]}"
     echo -e "${info_message[3_$language]}"
@@ -1744,7 +1749,7 @@ update_ssb() {
 
     if [[ $update_script =~ '#!/bin/bash' ]]
     then
-        export version="1.4.1" language
+        export version="1.4.2" language
         export -f get_ip templates get_data check_users check_github_template get_pass edit_configs_loop add_rule_sets_loop sync_client_configs_main
         bash <(echo "${update_script}")
         exit 0

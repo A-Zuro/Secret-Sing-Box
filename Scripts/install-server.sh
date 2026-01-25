@@ -788,10 +788,10 @@ enable_bbr() {
     info_message[1_en]="${textcolor_light}Setting up BBR...${clear}"
 
     echo -e "${info_message[1_$language]}"
-    touch /etc/sysctl.conf
-    [[ $(sysctl net.core.default_qdisc) != *"= fq" ]] && echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-    [[ $(sysctl net.ipv4.tcp_congestion_control) != *"bbr" ]] && echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
-    sysctl -p
+    echo "net.core.default_qdisc = fq" >> /etc/sysctl.d/99-ssb.conf
+    echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.d/99-ssb.conf
+    sysctl --system &> /dev/null
+    sysctl net.core.default_qdisc net.ipv4.tcp_congestion_control
     echo ""
 }
 
@@ -960,8 +960,6 @@ cert_dns_cf() {
         certbot delete --cert-name ${domain} --quiet &> /dev/null
         certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.credentials --dns-cloudflare-propagation-seconds 35 -d ${domain},*.${domain} --agree-tos -m ${email} --no-eff-email --non-interactive
     fi
-
-    echo "0 2 * * * certbot -q renew" | crontab -
 }
 
 cert_standalone() {
@@ -978,7 +976,6 @@ cert_standalone() {
     fi
 
     ufw delete allow 80 &> /dev/null
-    echo "0 2 * * * ufw allow 80 && certbot -q renew; ufw delete allow 80" | crontab -
 }
 
 certificates() {
@@ -1064,7 +1061,6 @@ download_rule_sets() {
     chmod -R 755 /var/www/${rulesetpath}
     wget -O /usr/local/bin/rsupdate https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/ruleset-update.sh
     chmod +x /usr/local/bin/rsupdate
-    { echo "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"; crontab -l; echo "10 2 * * * rsupdate"; } | crontab -
 }
 
 sb_server_config() {
@@ -1379,15 +1375,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "duckduckgo",
           "yahoo",
           "mozilla",
-          "samsung",
-          "huawei",
-          "apple",
-          "nvidia",
-          "xiaomi",
-          "hp",
-          "asus",
-          "lenovo",
-          "lg",
           "oracle",
           "adobe",
           "blender",
@@ -1403,7 +1390,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "clarivate",
           "sci-hub",
           "duolingo",
-          "aljazeera",
           "torrent-clients"
         ],
         "server": "dns-local"
@@ -1570,15 +1556,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "duckduckgo",
           "yahoo",
           "mozilla",
-          "samsung",
-          "huawei",
-          "apple",
-          "nvidia",
-          "xiaomi",
-          "hp",
-          "asus",
-          "lenovo",
-          "lg",
           "oracle",
           "adobe",
           "blender",
@@ -1594,7 +1571,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "clarivate",
           "sci-hub",
           "duolingo",
-          "aljazeera",
           "torrent-clients"
         ],
         "outbound": "direct"
@@ -1732,60 +1708,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "url": "https://${domain}/${rulesetpath}/geosite-mozilla.srs"
       },
       {
-        "tag": "samsung",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-samsung.srs"
-      },
-      {
-        "tag": "huawei",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-huawei.srs"
-      },
-      {
-        "tag": "apple",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-apple.srs"
-      },
-      {
-        "tag": "nvidia",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-nvidia.srs"
-      },
-      {
-        "tag": "xiaomi",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-xiaomi.srs"
-      },
-      {
-        "tag": "hp",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-hp.srs"
-      },
-      {
-        "tag": "asus",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-asus.srs"
-      },
-      {
-        "tag": "lenovo",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-lenovo.srs"
-      },
-      {
-        "tag": "lg",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-lg.srs"
-      },
-      {
         "tag": "oracle",
         "type": "remote",
         "format": "binary",
@@ -1874,12 +1796,6 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "type": "remote",
         "format": "binary",
         "url": "https://${domain}/${rulesetpath}/geosite-duolingo.srs"
-      },
-      {
-        "tag": "aljazeera",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://${domain}/${rulesetpath}/geosite-aljazeera.srs"
       },
       {
         "tag": "category-ads-all",
@@ -2400,6 +2316,26 @@ setup_haproxy() {
     fi
 }
 
+setup_crontab() {
+    declare -A -g info_message=()
+    info_message[1_ru]="${textcolor_light}Настройка crontab...${clear}"
+    info_message[1_en]="${textcolor_light}Setting up crontab...${clear}"
+
+    echo -e "${info_message[1_$language]}"
+    certbot_command="ufw allow 80 && certbot -q renew; ufw delete allow 80"
+    [[ "$validation_type" == "1" ]] && certbot_command="certbot -q renew"
+
+	crontab - <<-EOF
+	PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+	@reboot sleep 5 && sysctl --system
+	0 2 * * * ${certbot_command}
+	10 2 * * * rsupdate
+	EOF
+
+    crontab -l
+    echo ""
+}
+
 add_sbmanager() {
     declare -A -g info_message=()
     info_message[1_ru]="${textcolor_light}Добавление меню настроек...${clear}"
@@ -2544,6 +2480,7 @@ setup_warp
 setup_sing_box
 setup_nginx
 setup_haproxy
+setup_crontab
 add_sbmanager
 add_sub_page
 final_text_${language}
