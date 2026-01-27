@@ -130,7 +130,7 @@ check_link() {
     check_message[1_en]="${red}Error: the link is incorrect or the server is not available${clear}"
     check_message[2_en]="${textcolor}[?]${clear} Enter your client config link or enter ${textcolor}x${clear} to exit:"
 
-    while [[ -z $link ]] || [[ ! $(curl -s "${link}") =~ '"tag": "proxy"' ]]
+    while [[ -z $link ]] || [[ ! $(curl -s "${link}" 2> /dev/null) =~ '"tag": "proxy"' ]]
     do
         if [[ -n $link ]]
         then

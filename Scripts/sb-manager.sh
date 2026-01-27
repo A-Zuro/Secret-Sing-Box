@@ -1050,7 +1050,7 @@ check_next_link() {
         read -r next_link
         [[ -n $next_link ]] && echo ""
         exit_enter_next_link
-        next_config=$(curl -s "${next_link}")
+        next_config=$(curl -s "${next_link}" 2> /dev/null)
     done
 }
 
@@ -1063,7 +1063,7 @@ enter_chain_data() {
     read -r next_link
     [[ -n $next_link ]] && echo ""
     exit_enter_next_link
-    next_config=$(curl -s "${next_link}")
+    next_config=$(curl -s "${next_link}" 2> /dev/null)
     check_next_link
 }
 
@@ -1259,6 +1259,7 @@ enter_data_reissue_cert() {
         echo -e "${input_message[1_$language]}"
         read -r email
         [[ -n $email ]] && echo ""
+        email=$(echo "${email}" | sed 's/[[:blank:]]//g')
     done
 }
 
@@ -1378,7 +1379,7 @@ exit_change_domain() {
 crop_domain() {
     domain=${domain#*"://"}
     domain=${domain#"www."}
-    domain=$(echo "${domain}" | cut -d "/" -f 1)
+    domain=$(echo "${domain}" | cut -d "/" -f 1 | sed 's/[[:blank:]]//g')
 }
 
 get_test_response() {
@@ -1450,6 +1451,7 @@ enter_domain_data() {
         echo -e "${input_message[2_$language]}"
         read -r email
         [[ -n $email ]] && echo ""
+        email=$(echo "${email}" | sed 's/[[:blank:]]//g')
     done
     if [[ "$validation_type" == "1" ]]
     then

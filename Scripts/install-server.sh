@@ -129,7 +129,7 @@ get_ip() {
 crop_domain() {
     domain=${domain#*"://"}
     domain=${domain#"www."}
-    domain=$(echo "${domain}" | cut -d "/" -f 1)
+    domain=$(echo "${domain}" | cut -d "/" -f 1 | sed 's/[[:blank:]]//g')
 }
 
 crop_redirect_domain() {
@@ -390,7 +390,7 @@ check_redirect_domain() {
     check_message[1_en]="${red}Error: this domain is invalid or does not have HTTPS, select another domain${clear}"
     check_message[2_en]="${textcolor}[?]${clear} Enter the domain to which requests will be redirected:"
 
-    while [[ -z $redirect ]] || [[ $redirect =~ " " ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" https://${redirect}) == "000" ]]
+    while [[ -z $redirect ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" "https://${redirect}") == "000" ]]
     do
         if [[ -n $redirect ]]
         then
@@ -413,7 +413,7 @@ check_site_link() {
 
     apt install wget -y &> /dev/null
 
-    while [[ -z $site_link ]] || [[ $site_link =~ " " ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" https://${site_link}) == "000" ]] || ! wget -q -O /dev/null https://${site_link}
+    while [[ -z $site_link ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" "https://${site_link}") == "000" ]] || ! wget -q -O /dev/null "https://${site_link}"
     do
         if [[ -n $site_link ]]
         then
@@ -436,7 +436,7 @@ check_index_path() {
     check_message[2_en]="doesn't exist, check if the folder of your website is uploaded to the /root directory of the server${clear}"
     check_message[3_en]="${textcolor}[?]${clear} Enter the path to the index file inside the folder of your website (e. g., /site_folder/index.html):"
 
-    while [[ -z $index_path ]] || [[ $index_path =~ " " ]] || [[ ! -f /root${index_path} ]]
+    while [[ -z $index_path ]] || [[ ! -f /root${index_path} ]]
     do
         if [[ -n $index_path ]]
         then
@@ -572,6 +572,7 @@ enter_domain_data() {
         echo -e "${input_message[2_$language]}"
         read -r email
         [[ -n $email ]] && echo ""
+        email=$(echo "${email}" | sed 's/[[:blank:]]//g')
     done
     if [[ "$validation_type" == "1" ]]
     then
