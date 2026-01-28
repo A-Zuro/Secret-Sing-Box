@@ -179,6 +179,8 @@ check_username_add() {
             echo ""
         else
             echo -e "${check_message[2_$language]}"
+            echo -e "${red}https://${domain}/${subspath}/${username}-TRJ-CLIENT.json${clear}"
+            [[ ! -f /etc/haproxy/auth.lua ]] && echo -e "${red}https://${domain}/${subspath}/${username}-VLESS-CLIENT.json${clear}"
             echo ""
         fi
         echo -e "${check_message[3_$language]}"
