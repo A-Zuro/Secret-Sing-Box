@@ -7,7 +7,7 @@
 Для начала нужно добавить домен в [аккаунт Cloudflare](https://dash.cloudflare.com) и указать NS-сервера Cloudflare у вашего регистратора доменов.
 
 Далее выполнить следующие настройки в аккаунте Cloudflare: 
-1) SSL/TLS > Overview > Configure > Full
+1) SSL/TLS > Overview > Full
 2) SSL/TLS > Edge Certificates > Minimum TLS Version > TLS 1.2
 3) SSL/TLS > Edge Certificates > TLS 1.3 > Включить
 
