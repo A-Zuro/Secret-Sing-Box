@@ -7,7 +7,7 @@
 First, you need to add your domain to your [Cloudflare account](https://dash.cloudflare.com) and specify Cloudflare NS servers at your domain registrar.
 
 Next, change the following settings in your Cloudflare account: 
-1) SSL/TLS > Overview > Full
+1) SSL/TLS > Overview > Configure > Full
 2) SSL/TLS > Edge Certificates > Minimum TLS Version > TLS 1.2
 3) SSL/TLS > Edge Certificates > TLS 1.3 > Enable
 
