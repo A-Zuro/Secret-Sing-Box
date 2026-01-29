@@ -1904,38 +1904,39 @@ events {
 }
 
 http {
-    sendfile                  on;
-    tcp_nopush                on;
-    tcp_nodelay               on;
-    server_tokens             off;
-    types_hash_max_size       2048;
-    types_hash_bucket_size    64;
-    client_max_body_size      16M;
+    sendfile                      on;
+    tcp_nopush                    on;
+    tcp_nodelay                   on;
+    server_tokens                 off;
+    types_hash_max_size           2048;
+    types_hash_bucket_size        64;
+    server_names_hash_bucket_size 128;
+    client_max_body_size          16M;
 
     # Timeout
-    keepalive_timeout         60s;
-    keepalive_requests        1000;
-    reset_timedout_connection on;
+    keepalive_timeout             60s;
+    keepalive_requests            1000;
+    reset_timedout_connection     on;
 
     # Rate limit for the subscription path
-    limit_req_zone            \$binary_remote_addr zone=limit_sub:1m rate=60r/m;
+    limit_req_zone                \$binary_remote_addr zone=limit_sub:1m rate=60r/m;
 
     # MIME
-    include                   mime.types;
-    default_type              application/octet-stream;
+    include                       mime.types;
+    default_type                  application/octet-stream;
 
     # Logging
-    access_log                off;
-    error_log                 off;
+    access_log                    off;
+    error_log                     off;
 
     # SSL
-    ssl_session_timeout       1d;
-    ssl_session_cache         shared:SSL:10m;
-    ssl_session_tickets       off;
+    ssl_session_timeout           1d;
+    ssl_session_cache             shared:SSL:10m;
+    ssl_session_tickets           off;
 
     # Mozilla Intermediate configuration
-    ssl_protocols             TLSv1.2 TLSv1.3;
-    ssl_ciphers               TLS13_AES_128_GCM_SHA256:TLS13_AES_256_GCM_SHA384:TLS13_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305;
+    ssl_protocols                 TLSv1.2 TLSv1.3;
+    ssl_ciphers                   TLS13_AES_128_GCM_SHA256:TLS13_AES_256_GCM_SHA384:TLS13_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305;
 
     # Connection header for WebSocket reverse proxy
     map \$http_upgrade \$connection_upgrade {
