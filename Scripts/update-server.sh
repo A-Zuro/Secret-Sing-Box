@@ -25,7 +25,7 @@ check_update() {
     info_message[3_en]="New version is available:"
 
     [[ ! $language =~ ^[a-z]+$ ]] && language="ru"   # Legacy
-    new_version="1.4.2"
+    new_version="1.4.3"
 
     if [[ "$version" == "$new_version" ]]
     then
@@ -176,6 +176,11 @@ update_services() {
         insert_values
     fi
 
+    curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+    curl -fsSL https://sing-box.app/gpg.key -o /etc/apt/keyrings/sagernet.asc && chmod a+r /etc/apt/keyrings/sagernet.asc
+    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg > /dev/null
+    gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg /etc/apt/keyrings/sagernet.asc /usr/share/keyrings/nginx-archive-keyring.gpg
+
     apt-mark unhold sing-box
     apt update -y && apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" full-upgrade -y
     apt-mark hold sing-box
@@ -229,6 +234,7 @@ update_scripts() {
     wget -O /usr/local/bin/rsupdate https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/ruleset-update.sh
     chmod +x /usr/local/bin/sbmanager /usr/local/bin/rsupdate
     grep -q "alias ssb=" /etc/bash.bashrc || echo "alias ssb='/usr/local/bin/sbmanager'" >> /etc/bash.bashrc   # Legacy
+    grep -q "alias sudo=" /etc/bash.bashrc || echo "alias sudo='sudo '" >> /etc/bash.bashrc   # Legacy
     [[ ! $(crontab -l) =~ "PATH=" ]] && crontab -l | sed '1i PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin' | crontab -   # Legacy
     echo ""
 }

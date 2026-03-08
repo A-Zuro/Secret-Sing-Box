@@ -29,11 +29,23 @@
         "disable_cache": true
       },
       {
+        "package_name": [
+          "ru.oneme.app",
+          "com.vkontakte.android",
+          "ru.rostel"
+        ],
+        "rule_set": [
+          "torrent-clients"
+        ],
+        "server": "dns-local"
+      },
+      {
         "domain_suffix": [
           "habr.com",
           "kemono.su",
           "jut.su",
           "kara.su",
+          "smods.ru",
           "theins.ru",
           "tvrain.ru",
           "echo.msk.ru",
@@ -127,8 +139,7 @@
           "sciencedirect",
           "clarivate",
           "sci-hub",
-          "duolingo",
-          "torrent-clients"
+          "duolingo"
         ],
         "server": "dns-local"
       },
@@ -148,8 +159,7 @@
       "interface_name": "tun0",
       "stack": "system",
       "address": [
-        "172.19.0.1/28",
-        "fdfe:dcba:9876::1/126"
+        "172.19.0.1/28"
       ],
       "auto_route": true,
       "strict_route": true,
@@ -207,11 +217,23 @@
         "method": "drop"
       },
       {
+        "package_name": [
+          "ru.oneme.app",
+          "com.vkontakte.android",
+          "ru.rostel"
+        ],
+        "rule_set": [
+          "torrent-clients"
+        ],
+        "outbound": "direct"
+      },
+      {
         "domain_suffix": [
           "habr.com",
           "kemono.su",
           "jut.su",
           "kara.su",
+          "smods.ru",
           "theins.ru",
           "tvrain.ru",
           "echo.msk.ru",
@@ -308,8 +330,7 @@
           "sciencedirect",
           "clarivate",
           "sci-hub",
-          "duolingo",
-          "torrent-clients"
+          "duolingo"
         ],
         "outbound": "direct"
       },

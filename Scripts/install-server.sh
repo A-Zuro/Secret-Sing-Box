@@ -832,13 +832,14 @@ install_packages() {
 
     [[ ! -d /usr/share/keyrings ]] && mkdir -p /usr/share/keyrings
     curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+    gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ ${os_codename} main" | tee /etc/apt/sources.list.d/cloudflare-client.list
     apt-get update -y && apt-get install cloudflare-warp -y
     #downgrade_nasty_warp
 
     [[ ! -d /etc/apt/keyrings ]] && mkdir -p /etc/apt/keyrings
-    curl -fsSL https://sing-box.app/gpg.key -o /etc/apt/keyrings/sagernet.asc
-    chmod a+r /etc/apt/keyrings/sagernet.asc
+    curl -fsSL https://sing-box.app/gpg.key -o /etc/apt/keyrings/sagernet.asc && chmod a+r /etc/apt/keyrings/sagernet.asc
+    gpg --dry-run --quiet --no-keyring --import --import-options import-show /etc/apt/keyrings/sagernet.asc
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/sagernet.asc] https://deb.sagernet.org/ * *" | tee /etc/apt/sources.list.d/sagernet.list > /dev/null
     apt-get update -y && apt-get install sing-box -y
     apt-mark hold sing-box
@@ -1292,11 +1293,23 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "disable_cache": true
       },
       {
+        "package_name": [
+          "ru.oneme.app",
+          "com.vkontakte.android",
+          "ru.rostel"
+        ],
+        "rule_set": [
+          "torrent-clients"
+        ],
+        "server": "dns-local"
+      },
+      {
         "domain_suffix": [
           "habr.com",
           "kemono.su",
           "jut.su",
           "kara.su",
+          "smods.ru",
           "theins.ru",
           "tvrain.ru",
           "echo.msk.ru",
@@ -1390,8 +1403,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "sciencedirect",
           "clarivate",
           "sci-hub",
-          "duolingo",
-          "torrent-clients"
+          "duolingo"
         ],
         "server": "dns-local"
       },
@@ -1411,8 +1423,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
       "interface_name": "tun0",
       "stack": "system",
       "address": [
-        "172.19.0.1/28",
-        "fdfe:dcba:9876::1/126"
+        "172.19.0.1/28"
       ],
       "auto_route": true,
       "strict_route": true,
@@ -1470,11 +1481,23 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "method": "drop"
       },
       {
+        "package_name": [
+          "ru.oneme.app",
+          "com.vkontakte.android",
+          "ru.rostel"
+        ],
+        "rule_set": [
+          "torrent-clients"
+        ],
+        "outbound": "direct"
+      },
+      {
         "domain_suffix": [
           "habr.com",
           "kemono.su",
           "jut.su",
           "kara.su",
+          "smods.ru",
           "theins.ru",
           "tvrain.ru",
           "echo.msk.ru",
@@ -1571,8 +1594,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "sciencedirect",
           "clarivate",
           "sci-hub",
-          "duolingo",
-          "torrent-clients"
+          "duolingo"
         ],
         "outbound": "direct"
       },
@@ -2192,8 +2214,8 @@ setup_nginx() {
 auth_lua() {
 cat > /etc/haproxy/auth.lua <<EOF
 local passwords = {
-    ["${pass_hash}"] = true,
-    ["${placeholder}"] = false        -- Placeholder (do not remove)
+    ["${pass_hash}"] = true,    -- User '${user_key}'
+    ["${placeholder}"] = false    -- Placeholder (do not remove)
 }
 
 function trojan_auth(txn)
@@ -2347,6 +2369,7 @@ add_sbmanager() {
     wget -O /usr/local/bin/sbmanager https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/sb-manager.sh
     chmod +x /usr/local/bin/sbmanager
     echo "alias ssb='/usr/local/bin/sbmanager'" >> /etc/bash.bashrc
+    echo "alias sudo='sudo '" >> /etc/bash.bashrc
 }
 
 add_sub_page() {

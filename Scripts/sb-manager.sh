@@ -168,12 +168,9 @@ check_username_add() {
     check_message[2_en]="${red}Error: this user already exists${clear}"
     check_message[3_en]="${textcolor}[?]${clear} Enter the name of the new user or enter ${textcolor}x${clear} to exit:"
 
-    while [[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]] || [[ -f /var/www/${subspath}/${username}-TRJ-CLIENT.json ]] || [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "false" ]]
+    while ([[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]] || [[ -f /var/www/${subspath}/${username}-TRJ-CLIENT.json ]] || [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "false" ]]) && [[ -n $username ]]
     do
-        if [[ -z $username ]]
-        then
-            :
-        elif [[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]]
+        if [[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]]
         then
             echo -e "${check_message[1_$language]}"
             echo ""
@@ -266,6 +263,7 @@ enter_user_data_add() {
 }
 
 generate_pass() {
+    [[ -z $username ]] && username=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 10)
     [[ -z $trjpass ]] && trjpass=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
     [[ -z $uuid ]] && [[ ! -f /etc/haproxy/auth.lua ]] && uuid=$(cat /proc/sys/kernel/random/uuid)
 }
@@ -310,7 +308,7 @@ add_to_auth_lua() {
     if [[ -f /etc/haproxy/auth.lua ]]
     then
         pass_hash=$(echo -n "${trjpass}" | openssl dgst -sha224 | sed 's/.* //')
-        sed -i "2i \ \ \ \ [\"${pass_hash}\"] = true," /etc/haproxy/auth.lua
+        sed -i "2i \ \ \ \ [\"${pass_hash}\"] = true,    -- User '${username}'" /etc/haproxy/auth.lua
         systemctl reload haproxy.service
     fi
 }
@@ -1753,7 +1751,7 @@ update_ssb() {
 
     if [[ $update_script =~ '#!/bin/bash' ]]
     then
-        export version="1.4.2" language
+        export version="1.4.3" language
         export -f get_ip templates get_data check_users check_github_template get_pass edit_configs_loop add_rule_sets_loop sync_client_configs_main
         bash <(echo "${update_script}")
         exit 0

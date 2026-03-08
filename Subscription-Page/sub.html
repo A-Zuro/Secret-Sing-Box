@@ -101,10 +101,6 @@
             html[lang="ru"] .frame {
                 width: 400px;
             }
-
-            .linebreak {
-                display: none;
-            }
         }
 
         h3 {
@@ -117,27 +113,56 @@
         }
 
         .button {
-            background-color: rgba(25, 25, 135, 0.1);
-            box-shadow: 2px 2px 4px rgba(0, 0, 100, 0.2), inset -2px -2px 4px rgba(0, 0, 100, 0.15);
-            border: 1px solid black;
             border-radius: 4px;
             margin: 8px 4px;
             padding: 5px 10px;
             font-size: 14px;
             cursor: pointer;
+            transition: background-color 0.5s;
         }
 
-        .button:hover {
+        .btn-1 {
+            background-color: rgba(25, 25, 135, 0.1);
+            box-shadow: 2px 2px 4px rgba(0, 0, 100, 0.25), inset -2px -2px 4px rgba(0, 0, 100, 0.2);
+            border: 1px solid black;
+            min-width: 93px;
+        }
+
+        .btn-1:hover {
             background-color: rgba(0, 0, 100, 0.2);
+        }
+
+        .btn-2 {
+            background-color: rgba(25, 25, 240, 0.25);
+            box-shadow: 2px 2px 4px rgba(0, 0, 200, 0.35), inset -2px -2px 4px rgba(0, 0, 200, 0.3);
+            border: 1px solid rgb(25, 25, 240);
+        }
+
+        html[lang="en"] .btn-2 {
+            min-width: 103px;
+        }
+
+        html[lang="ru"] .btn-2 {
+            min-width: 110px;
+        }
+
+        .btn-2:hover {
+            background-color: rgba(0, 0, 200, 0.3);
         }
 
         input {
             background-color: rgba(255, 255, 255, 0.7);
-            box-shadow: inset 2px 2px 4px rgba(0, 0, 100, 0.1);
-            border: 1px solid black;
+            transition: background-color 0.5s;
+            box-shadow: inset 2px 2px 4px rgba(0, 0, 200, 0.2);
+            border: 1px solid rgb(25, 25, 180);
             border-radius: 4px;
             padding: 5px 10px;
             font-size: 14px;
+        }
+
+        input::placeholder {
+            color: rgb(100, 100, 190);
+            opacity: 1;
         }
 
         html[lang="en"] input {
@@ -149,7 +174,7 @@
         }
 
         input:hover {
-            background-color: rgba(240, 240, 248, 0.7);
+            background-color: rgba(235, 235, 250, 0.7);
         }
     </style>
 </head>
@@ -160,34 +185,33 @@
     <div language="en">
         <h2 style="line-height: 2em;">1. Download the app</h2>
         <h3>- Android -</h3>
-        <button class="button"
-            onclick="window.open('https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         or
-        <button class="button"
-            onclick="window.open('https://play.google.com/store/apps/details?id=app.hiddify.com', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://play.google.com/store/apps/details?id=app.hiddify.com', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h3>- iOS and macOS -</h3>
-        <button class="button"
-            onclick="window.open('https://apps.apple.com/us/app/sing-box-vt/id6673731168', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://apps.apple.com/us/app/sing-box-vt/id6673731168', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         or
-        <button class="button"
-            onclick="window.open('https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h3>- Windows and Linux -</h3>
-        <button class="button"
-            onclick="window.open('https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README-EN.md#client-setup', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README-EN.md#client-setup', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         or
-        <button class="button"
-            onclick="window.open('https://github.com/hiddify/hiddify-app/releases/latest', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://github.com/hiddify/hiddify-app/releases/latest', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h2 style="line-height: 0.75em;">2. Connect to the server</h2>
         <p style="line-height: 2em;"><i>For graphical clients</i></p>
         <p>
         <form onsubmit="return false;">
             <input id="nameInput-en" type="text" placeholder="Enter your username..." autocomplete="off" required><br>
-            <button class="button" style="margin-top: 26px" onclick="openTrojanUrl()"> Open Trojan URL </button>
-            <br class="linebreak">
-            <button variant="novless" class="button" style="margin-top: 15px" onclick="openVlessUrl()">Open VLESS URL</button>
+            <button class="button btn-2" style="margin-top: 25px;" onclick="openTrojanUrl()">Trojan URL</button>
+            <button variant="novless" class="button btn-2" style="margin-top: 25px;" onclick="openVlessUrl()">VLESS URL</button>
         </form>
         </p>
         <br>
@@ -196,34 +220,33 @@
     <div language="ru">
         <h2 style="line-height: 2em;">1. Скачайте приложение</h2>
         <h3>- Android -</h3>
-        <button class="button"
-            onclick="window.open('https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         или
-        <button class="button"
-            onclick="window.open('https://play.google.com/store/apps/details?id=app.hiddify.com', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://play.google.com/store/apps/details?id=app.hiddify.com', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h3>- iOS и macOS -</h3>
-        <button class="button"
-            onclick="window.open('https://apps.apple.com/us/app/sing-box-vt/id6673731168', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://apps.apple.com/us/app/sing-box-vt/id6673731168', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         или
-        <button class="button"
-            onclick="window.open('https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h3>- Windows и Linux -</h3>
-        <button class="button"
-            onclick="window.open('https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README.md#настройка-клиентов', '_blank', 'noopener,noreferrer')">   Sing-Box   </button>
+        <button class="button btn-1"
+            onclick="window.open('https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/README.md#настройка-клиентов', '_blank', 'noopener,noreferrer')">Sing-Box</button>
         или
-        <button class="button"
-            onclick="window.open('https://github.com/hiddify/hiddify-app/releases/latest', '_blank', 'noopener,noreferrer')">     Hiddify     </button>
+        <button class="button btn-1"
+            onclick="window.open('https://github.com/hiddify/hiddify-app/releases/latest', '_blank', 'noopener,noreferrer')">Hiddify</button>
         <br><br>
         <h2 style="line-height: 0.75em;">2. Подключитесь к серверу</h2>
         <p style="line-height: 2em;"><i>Для графических клиентов</i></p>
         <p>
         <form onsubmit="return false;">
             <input id="nameInput-ru" type="text" placeholder="Введите имя пользователя..." autocomplete="off" required><br>
-            <button class="button" style="margin-top: 26px" onclick="openTrojanUrl()"> Открыть Trojan URL </button>
-            <br class="linebreak">
-            <button variant="novless" class="button" style="margin-top: 15px" onclick="openVlessUrl()">Открыть VLESS URL</button>
+            <button class="button btn-2" style="margin-top: 25px;" onclick="openTrojanUrl()">Trojan URL</button>
+            <button variant="novless" class="button btn-2" style="margin-top: 25px;" onclick="openVlessUrl()">VLESS URL</button>
         </form>
         </p>
         <br>
