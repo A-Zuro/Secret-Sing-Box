@@ -51,7 +51,7 @@ C:\actual\path\to\sing-box.exe run -c C:\1-sbconfig\client.json
 
 Далее нажмите на ярлык правой кнопкой мыши и выберите «Свойства», затем перейдите во вкладку «Ярлык»:
 
-![w3](https://github.com/user-attachments/assets/ec6a3c3b-e3ab-4eda-86ef-24b780b6a17f)
+![w3](https://github.com/user-attachments/assets/370c8c40-d861-4255-a1b0-e8f081bcae61)
 
 Выберите «Дополнительно» и поставьте галочку «Запуск от имени администратора», потом везде нажмите OK.
 
