@@ -224,6 +224,7 @@ client_script_add() {
 	echo ""
 
 	wget -q -O /etc/sing-box/config.json.1 ${link} && mv -f /etc/sing-box/config.json.1 /etc/sing-box/config.json
+	export ENABLE_DEPRECATED_LEGACY_DNS_SERVERS="true" ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER="true"
 	sing-box run -c /etc/sing-box/config.json
 	EOF
 

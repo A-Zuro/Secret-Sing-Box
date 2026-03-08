@@ -23,6 +23,6 @@ Paste your link after step 5.
 ### 3) Check the connection:
 ![a3](https://github.com/user-attachments/assets/710ad733-fb16-4f8c-980f-3157f99502ea)
 
-The proxy should work now.
+After step 8, the proxy should work.
 
 When adding multiple proxies, you can switch between them as shown in step 9.

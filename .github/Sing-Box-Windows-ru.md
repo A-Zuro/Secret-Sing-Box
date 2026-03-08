@@ -34,10 +34,12 @@ echo Press Ctrl + C to disconnect
 echo.
 if not exist "C:\1-sbconfig\" mkdir C:\1-sbconfig
 curl -s -o C:\1-sbconfig\client.json https://example.com/secret175subscr1pt10n/username-VLESS-CLIENT.json
+set ENABLE_DEPRECATED_LEGACY_DNS_SERVERS=true
+set ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER=true
 sing-box run -c C:\1-sbconfig\client.json
 ```
 
-Ссылку в предпоследней строчке замените на свою.
+Ссылку в 7-ой строчке замените на свою.
 
 Для версий Windows, где нет winget, замените последнюю строчку таким образом и поменяйте путь к sing-box.exe на свой:
 
