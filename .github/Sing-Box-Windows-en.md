@@ -51,7 +51,7 @@ C:\actual\path\to\sing-box.exe run -c C:\1-sbconfig\client.json
 
 Next, right-click on the shortcut and select «Properties», then go to the «Shortcut» tab:
 
-![w3](https://github.com/user-attachments/assets/73f76c75-f891-49a9-9b95-dd659b145725)
+![w3](https://github.com/user-attachments/assets/370c8c40-d861-4255-a1b0-e8f081bcae61)
 
 Select «Advanced» and check the «Run as administrator» box, then click OK.
 
