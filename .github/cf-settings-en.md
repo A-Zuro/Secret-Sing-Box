@@ -14,7 +14,7 @@ Next, change the following settings in your Cloudflare account:
 ### DNS Settings
 Example of DNS records:
 
-![dns-2](https://github.com/user-attachments/assets/503bef75-2e50-4c46-9344-5f01bb3efdef)
+![dns](https://github.com/user-attachments/assets/bb128eaf-1930-4754-97aa-347cdf68e229)
 
 For the setup option with TLS termination on NGINX and WebSocket or HTTPUpgrade transport, you can enable proxying of both records (this may require to disable ECH).
 
@@ -30,7 +30,7 @@ In your Cloudflare account, select Overview > Get your API token > Create Token 
 
 Then specify the following settings:
 
-![token](https://github.com/user-attachments/assets/ad24e8b0-b817-4c31-bb9e-98a62cde43c7)
+![token](https://github.com/user-attachments/assets/803cfddc-16de-47d8-9cd3-e70f7c121474)
 
 Other settings can be left as is.
 
