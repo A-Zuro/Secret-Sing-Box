@@ -14,7 +14,7 @@
 ### Настройки DNS
 Пример DNS записей:
 
-![dns-2](https://github.com/user-attachments/assets/8f67a737-bb84-48bc-ba36-f56985e951d5)
+![dns-2](https://github.com/user-attachments/assets/bb128eaf-1930-4754-97aa-347cdf68e229)
 
 Для варианта настройки с терминированием TLS на NGINX и транспортом WebSocket или HTTPUpgrade можно включить проксирование обеих записей (требует [отключения ECH](https://habr.com/ru/articles/856602/)).
 
@@ -30,7 +30,7 @@
 
 Далее нужно указать следующие настройки:
 
-![token](https://github.com/user-attachments/assets/e32a752b-faa5-4d14-9c8c-1745b59636e4)
+![token](https://github.com/user-attachments/assets/803cfddc-16de-47d8-9cd3-e70f7c121474)
 
 Остальные настройки можно оставить, как есть.
 
