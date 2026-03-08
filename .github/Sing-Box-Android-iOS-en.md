@@ -12,28 +12,17 @@ After installing the app, you can use the subscription page for easier setup or 
 -----
 
 ### 2) Open Sing-Box app and import the link:
-![a1](https://github.com/user-attachments/assets/850f80f0-0d69-452f-ab6c-a501e6403f99)
+![a1](https://github.com/user-attachments/assets/8d0d5287-4d80-4fa5-9624-ca3b3c2732a0)
 
-![a2](https://github.com/user-attachments/assets/0ebf3b0c-3741-4143-bbc5-416cb397b7fb)
+![a2](https://github.com/user-attachments/assets/a9517306-1f54-47b1-ad22-d5434b03afbb)
 
-![a3e](https://github.com/user-attachments/assets/6659bd0d-f77a-4db1-ac98-cd8275b65b84)
-
-Paste your link after step 6.
+Paste your link after step 5.
 
 -----
 
 ### 3) Check the connection:
-![a4](https://github.com/user-attachments/assets/e596bee9-fbd5-417a-818f-41ff1983256e)
+![a3](https://github.com/user-attachments/assets/710ad733-fb16-4f8c-980f-3157f99502ea)
 
-The proxy should work now, but the setup is not complete yet.
+The proxy should work now.
 
------
-
-### 4) It’s recommended to use proxy only for the necessary apps:
-![a5](https://github.com/user-attachments/assets/5ac39237-f7c7-4f13-8f8c-bd2aa5e54a02)
-
-Then click on 3 dots in the upper right corner, select «Proxy Mode», and then select «Include».
-
-After that select the apps.
-
-Done!
+When adding multiple proxies, you can switch between them as shown in step 9.
