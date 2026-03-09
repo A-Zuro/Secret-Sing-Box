@@ -819,6 +819,7 @@ install_packages() {
     echo -e "${info_message[1_$language]}"
     apt install sudo coreutils nano wget ufw certbot python3-certbot-dns-cloudflare cron gnupg2 ca-certificates openssl sed jq net-tools htop -y
     [[ "$ssh_ufw" != "2" ]] && apt install unattended-upgrades -y
+    [[ ! -d /root/.gnupg ]] && mkdir -m 700 /root/.gnupg
     os_codename=$(grep "VERSION_CODENAME=" /etc/os-release | cut -d "=" -f 2)
 
     if grep -q -e "bullseye" -e "bookworm" -e "trixie" /etc/os-release
