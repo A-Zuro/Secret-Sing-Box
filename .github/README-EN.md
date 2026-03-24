@@ -66,7 +66,7 @@ ssb
 
 Then follow the instructions:
 
-![pic-2-en](https://github.com/user-attachments/assets/899843da-e2d8-4299-b234-371111fe48b6)
+![pic-2-en](https://github.com/user-attachments/assets/58ea4e4c-342a-4a8b-a18b-e4b5b987c50b)
 
 Option 5 synchronizes the settings in client configs of all users, which eliminates the need to edit the config of each user separately:
 
