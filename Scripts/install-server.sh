@@ -1299,6 +1299,14 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "com.vkontakte.android",
           "ru.rostel"
         ],
+        "server": "dns-local"
+      },
+      {
+        "process_name": [
+          "max.exe",
+          "max-service.exe",
+          "crashpad_handler.exe"
+        ],
         "rule_set": [
           "torrent-clients"
         ],
@@ -1317,7 +1325,8 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "the-village.ru",
           "snob.ru",
           "novayagazeta.ru",
-          "moscowtimes.ru"
+          "moscowtimes.ru",
+          "lesswrong.ru"
         ],
         "domain_keyword": [
           "animego",
@@ -1444,11 +1453,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
       "password": "${trjpass}",
       "tls": {
         "enabled": true,
-        "server_name": "${domain}",
-        "utls": {
-          "enabled": true,
-          "fingerprint": "randomized"
-        }
+        "server_name": "${domain}"
       },
       "transport": {
         "type": "ws",
@@ -1487,6 +1492,14 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "com.vkontakte.android",
           "ru.rostel"
         ],
+        "outbound": "direct"
+      },
+      {
+        "process_name": [
+          "max.exe",
+          "max-service.exe",
+          "crashpad_handler.exe"
+        ],
         "rule_set": [
           "torrent-clients"
         ],
@@ -1505,7 +1518,8 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
           "the-village.ru",
           "snob.ru",
           "novayagazeta.ru",
-          "moscowtimes.ru"
+          "moscowtimes.ru",
+          "lesswrong.ru"
         ],
         "domain_keyword": [
           "animego",

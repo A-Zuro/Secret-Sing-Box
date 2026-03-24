@@ -621,7 +621,7 @@ sync_local_text_en() {
 }
 
 sync_text_ru() {
-    echo -e "${textcolor}Выберите вариант синхронизации:${clear}"
+    echo -e "${textcolor}[?]${clear} Выберите вариант синхронизации:"
     echo "0 - Выйти"
     echo "1 - Синхронизировать с GitHub"
     echo "2 - Синхронизировать с локальным шаблоном (свои настройки)"
@@ -630,7 +630,7 @@ sync_text_ru() {
 }
 
 sync_text_en() {
-    echo -e "${textcolor}Select synchronisation option:${clear}"
+    echo -e "${textcolor}[?]${clear} Select synchronisation option:"
     echo "0 - Exit"
     echo "1 - Sync with GitHub"
     echo "2 - Sync with local template (custom settings)"
@@ -1617,7 +1617,252 @@ change_domain() {
     main_menu
 }
 
-### OPTION 13 - DISABLE IPv6 ###
+### OPTION 13 - CHANGE PATHS ###
+
+exit_change_paths() {
+    if [[ ${paths_change,,} =~ ^(x|х)$ ]]
+    then
+        paths_change=""
+        main_menu
+    fi
+}
+
+change_paths_text_ru() {
+    echo -e "${red}ВНИМАНИЕ!${clear}"
+    echo "Здесь вы можете поменять пути, если они были скомпрометированы"
+    echo "Не забудьте после этого заново добавить конфиги на клиентах"
+    echo ""
+    echo -e "${textcolor}[?]${clear} Нажмите ${textcolor}Enter${clear}, чтобы продолжить, или введите ${textcolor}x${clear}, чтобы выйти:"
+    read -r paths_change
+    [[ -n $paths_change ]] && echo ""
+}
+
+change_paths_text_en() {
+    echo -e "${red}ATTENTION!${clear}"
+    echo "Here you can change the paths if they were compromised"
+    echo "After this, don't forget to re-add configs to client apps"
+    echo ""
+    echo -e "${textcolor}[?]${clear} Press ${textcolor}Enter${clear} to continue or enter ${textcolor}x${clear} to exit:"
+    read -r paths_change
+    [[ -n $paths_change ]] && echo ""
+}
+
+old_paths() {
+    trojanpath_old="${trojanpath}"
+    vlesspath_old="${vlesspath}"
+    subspath_old="${subspath}"
+    rulesetpath_old="${rulesetpath}"
+    old_paths_list=("$trojanpath_old" "$vlesspath_old" "$subspath_old" "$rulesetpath_old")
+}
+
+check_trojan_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[3_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: the new path should not match with any of the old paths${clear}"
+    check_message[3_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
+
+    while ([[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${trojanpath}") && [[ -n $trojanpath ]]
+    do
+        if [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]]
+        then
+            echo -e "${check_message[1_$language]}"
+        else
+            echo -e "${check_message[2_$language]}"
+        fi
+        echo ""
+        echo -e "${check_message[3_$language]}"
+        read -r trojanpath
+        [[ -n $trojanpath ]] && echo ""
+        trojanpath=${trojanpath#"/"}
+    done
+}
+
+check_vless_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan и VLESS должны быть разными${clear}"
+    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan and VLESS must be different${clear}"
+    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
+    check_message[4_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
+
+    while ([[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$vlesspath" == "$trojanpath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${vlesspath}") && [[ -n $vlesspath ]]
+    do
+        if [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]
+        then
+            echo -e "${check_message[1_$language]}"
+        elif [[ "$vlesspath" == "$trojanpath" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+        else
+            echo -e "${check_message[3_$language]}"
+        fi
+        echo ""
+        echo -e "${check_message[4_$language]}"
+        read -r vlesspath
+        [[ -n $vlesspath ]] && echo ""
+        vlesspath=${vlesspath#"/"}
+    done
+}
+
+check_subscription_path() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS и подписки должны быть разными${clear}"
+    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan, VLESS and subscription must be different${clear}"
+    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
+    check_message[4_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
+
+    while ([[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${subspath}") && [[ -n $subspath ]]
+    do
+        if [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]
+        then
+            echo -e "${check_message[1_$language]}"
+        elif [[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+        else
+            echo -e "${check_message[3_$language]}"
+        fi
+        echo ""
+        echo -e "${check_message[4_$language]}"
+        read -r subspath
+        [[ -n $subspath ]] && echo ""
+        subspath=${subspath#"/"}
+    done
+}
+
+check_rulesetpath() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS, подписки и наборов правил должны быть разными${clear}"
+    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
+    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[2_en]="${red}Error: paths for Trojan, VLESS, subscription and rule sets must be different${clear}"
+    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
+    check_message[4_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
+
+    while ([[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${rulesetpath}") && [[ -n $rulesetpath ]]
+    do
+        if [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]
+        then
+            echo -e "${check_message[1_$language]}"
+        elif [[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+        else
+            echo -e "${check_message[3_$language]}"
+        fi
+        echo ""
+        echo -e "${check_message[4_$language]}"
+        read -r rulesetpath
+        [[ -n $rulesetpath ]] && echo ""
+        rulesetpath=${rulesetpath#"/"}
+    done
+}
+
+enter_new_paths() {
+    declare -A -g input_message=()
+    input_message[1_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
+    input_message[2_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
+    input_message[3_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
+    input_message[4_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
+    input_message[1_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
+    input_message[2_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
+    input_message[3_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
+    input_message[4_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
+
+    if [[ ! -f /etc/haproxy/auth.lua ]]
+    then
+        echo -e "${input_message[1_$language]}"
+        read -r trojanpath
+        [[ -n $trojanpath ]] && echo ""
+        trojanpath=${trojanpath#"/"}
+        check_trojan_path
+        echo -e "${input_message[2_$language]}"
+        read -r vlesspath
+        [[ -n $vlesspath ]] && echo ""
+        vlesspath=${vlesspath#"/"}
+        check_vless_path
+    fi
+    echo -e "${input_message[3_$language]}"
+    read -r subspath
+    [[ -n $subspath ]] && echo ""
+    subspath=${subspath#"/"}
+    check_subscription_path
+    echo -e "${input_message[4_$language]}"
+    read -r rulesetpath
+    [[ -n $rulesetpath ]] && echo ""
+    rulesetpath=${rulesetpath#"/"}
+    check_rulesetpath
+}
+
+generate_paths() {
+    [[ -z $trojanpath ]] && [[ ! -f /etc/haproxy/auth.lua ]] && trojanpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $vlesspath ]] && [[ ! -f /etc/haproxy/auth.lua ]] && vlesspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $subspath ]] && subspath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+    [[ -z $rulesetpath ]] && rulesetpath=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 30)
+}
+
+edit_configs_with_paths() {
+    declare -A -g info_message=()
+    info_message[1_ru]="Старые пути для ${paths_to_change}подписки и наборов правил заменены на новые"
+    info_message[1_en]="Old paths for ${paths_to_change}subscription and rule sets were changed to new ones"
+
+    sed -i "s/${rulesetpath_old}/${rulesetpath}/g" /etc/sing-box/config.json
+    sed -i -e "s/${subspath_old}/${subspath}/g" -e "s/${rulesetpath_old}/${rulesetpath}/g" /etc/nginx/nginx.conf
+
+    if [[ -f /etc/haproxy/haproxy.cfg ]]
+    then
+        sed -i -e "s/${subspath_old}/${subspath}/g" -e "s/${rulesetpath_old}/${rulesetpath}/g" /etc/haproxy/haproxy.cfg
+    else
+        inbound_num_tr=$(jq '[.inbounds[].tag] | index("trojan-in")' /etc/sing-box/config.json)
+        inbound_num_vl=$(jq '[.inbounds[].tag] | index("vless-in")' /etc/sing-box/config.json)
+        echo "$(jq ".inbounds[${inbound_num_tr}].transport.path = \"/${trojanpath}\" | .inbounds[${inbound_num_vl}].transport.path = \"/${vlesspath}\"" /etc/sing-box/config.json)" > /etc/sing-box/config.json
+        sed -i -e "s/${trojanpath_old}/${trojanpath}/g" -e "s/${vlesspath_old}/${vlesspath}/g" /etc/nginx/nginx.conf
+    fi
+
+    for file in /var/www/${subspath_old}/*-CLIENT.json
+    do
+        sed -i "s/${rulesetpath_old}/${rulesetpath}/g" ${file}
+        [[ -f /etc/haproxy/auth.lua ]] && continue
+        outbound_num=$(jq '[.outbounds[].tag] | index("proxy")' ${file})
+        new_path="/${trojanpath}"
+        [[ $(jq -r ".outbounds[${outbound_num}].type" ${file}) == "vless" ]] && new_path="/${vlesspath}"
+        echo "$(jq ".outbounds[${outbound_num}].transport.path = \"${new_path}\"" ${file})" > ${file}
+    done
+
+    sed -i "s/${subspath_old}/${subspath}/g" /var/www/${subspath_old}/sub.html
+    mv -f /var/www/${subspath_old} /var/www/${subspath}
+    mv -f /var/www/${rulesetpath_old} /var/www/${rulesetpath}
+    systemctl reload sing-box.service nginx.service
+    [[ -f /etc/haproxy/auth.lua ]] && systemctl reload haproxy.service
+
+    echo "${info_message[1_$language]}"
+    echo "https://${domain}/${subspath}/sub.html"
+    echo ""
+}
+
+change_paths() {
+    change_paths_text_${language}
+    exit_change_paths
+    old_paths
+    enter_new_paths
+    generate_paths
+    edit_configs_with_paths
+    main_menu
+}
+
+### OPTION 14 - DISABLE IPv6 ###
 
 disable_ipv6() {
     declare -A -g info_message=()
@@ -1636,7 +1881,7 @@ disable_ipv6() {
     main_menu
 }
 
-### OPTION 14 - ENABLE IPv6 ###
+### OPTION 15 - ENABLE IPv6 ###
 
 enable_ipv6() {
     declare -A -g info_message=()
@@ -1662,7 +1907,7 @@ enable_ipv6() {
     main_menu
 }
 
-### OPTION 15 - SHOW PATHS TO IMPORTANT FILES ###
+### OPTION 16 - SHOW PATHS TO IMPORTANT FILES ###
 
 show_paths_ru() {
     echo -e "${textcolor}Страница выдачи подписок пользователей:${clear}"
@@ -1740,7 +1985,7 @@ show_paths_en() {
     exit 0
 }
 
-### OPTION 16 - UPDATE SSB ###
+### OPTION 17 - UPDATE SSB ###
 
 update_ssb() {
     declare -A -g info_message=()
@@ -1751,7 +1996,7 @@ update_ssb() {
 
     if [[ $update_script =~ '#!/bin/bash' ]]
     then
-        export version="1.4.3" language
+        export version="1.4.4" language
         export -f get_ip templates get_data check_users check_github_template get_pass edit_configs_loop add_rule_sets_loop sync_client_configs_main
         bash <(echo "${update_script}")
         exit 0
@@ -1783,12 +2028,13 @@ main_menu_text_ru() {
     echo "---------------------------------"
     echo "11 - Обновить сертификат вручную"
     echo "12 - Сменить домен"
+    echo "13 - Поменять пути для ${paths_to_change}подписки и наборов правил"
     echo "---------------------------------"
-    echo "13 - Отключить IPv6 на сервере"
-    echo "14 - Включить IPv6 на сервере"
+    echo "14 - Отключить IPv6 на сервере"
+    echo "15 - Включить IPv6 на сервере"
     echo "---------------------------------"
-    echo "15 - Показать пути до конфигов и других значимых файлов"
-    echo "16 - Обновить"
+    echo "16 - Показать пути до конфигов и других значимых файлов"
+    echo "17 - Обновить"
     read -r option
     [[ -n $option ]] && echo ""
 }
@@ -1812,17 +2058,19 @@ main_menu_text_en() {
     echo "---------------------------------"
     echo "11 - Renew certificate manually"
     echo "12 - Change domain"
+    echo "13 - Change paths for ${paths_to_change}subscription and rule sets"
     echo "---------------------------------"
-    echo "13 - Disable IPv6 on the server"
-    echo "14 - Enable IPv6 on the server"
+    echo "14 - Disable IPv6 on the server"
+    echo "15 - Enable IPv6 on the server"
     echo "---------------------------------"
-    echo "15 - Show paths to configs and other important files"
-    echo "16 - Update"
+    echo "16 - Show paths to configs and other important files"
+    echo "17 - Update"
     read -r option
     [[ -n $option ]] && echo ""
 }
 
 main_menu() {
+    [[ ! -f /etc/haproxy/auth.lua ]] && paths_to_change="Trojan, VLESS, "
     main_menu_text_${language}
 
     case $option in
@@ -1863,15 +2111,18 @@ main_menu() {
         change_domain
         ;;
         13)
-        disable_ipv6
+        change_paths
         ;;
         14)
-        enable_ipv6
+        disable_ipv6
         ;;
         15)
-        show_paths_${language}
+        enable_ipv6
         ;;
         16)
+        show_paths_${language}
+        ;;
+        17)
         update_ssb
         ;;
         *)

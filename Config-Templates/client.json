@@ -34,6 +34,14 @@
           "com.vkontakte.android",
           "ru.rostel"
         ],
+        "server": "dns-local"
+      },
+      {
+        "process_name": [
+          "max.exe",
+          "max-service.exe",
+          "crashpad_handler.exe"
+        ],
         "rule_set": [
           "torrent-clients"
         ],
@@ -52,7 +60,8 @@
           "the-village.ru",
           "snob.ru",
           "novayagazeta.ru",
-          "moscowtimes.ru"
+          "moscowtimes.ru",
+          "lesswrong.ru"
         ],
         "domain_keyword": [
           "animego",
@@ -179,11 +188,7 @@
       "password": "TROJAN-PASSWORD",
       "tls": {
         "enabled": true,
-        "server_name": "DOMAIN",
-        "utls": {
-          "enabled": true,
-          "fingerprint": "randomized"
-        }
+        "server_name": "DOMAIN"
       },
       "transport": {
         "type": "ws",
@@ -222,6 +227,14 @@
           "com.vkontakte.android",
           "ru.rostel"
         ],
+        "outbound": "direct"
+      },
+      {
+        "process_name": [
+          "max.exe",
+          "max-service.exe",
+          "crashpad_handler.exe"
+        ],
         "rule_set": [
           "torrent-clients"
         ],
@@ -240,7 +253,8 @@
           "the-village.ru",
           "snob.ru",
           "novayagazeta.ru",
-          "moscowtimes.ru"
+          "moscowtimes.ru",
+          "lesswrong.ru"
         ],
         "domain_keyword": [
           "animego",
