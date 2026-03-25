@@ -26,3 +26,5 @@ Paste your link after step 5.
 After step 8, the proxy should work.
 
 When adding multiple proxies, you can switch between them as shown in step 9.
+
+To disable **deprecated warnings**, go to Settings > Core > Disable Deprecated Warnings.
