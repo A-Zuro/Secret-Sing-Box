@@ -25,7 +25,7 @@ check_update() {
     info_message[3_en]="New version is available:"
 
     [[ ! $language =~ ^[a-z]+$ ]] && language="ru"   # Legacy
-    new_version="1.4.4"
+    new_version="1.4.5"
 
     if [[ "$version" == "$new_version" ]]
     then

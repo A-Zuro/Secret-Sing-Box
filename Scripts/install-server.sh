@@ -1436,8 +1436,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "172.19.0.1/28"
       ],
       "auto_route": true,
-      "strict_route": true,
-      "sniff_override_destination": true
+      "strict_route": true
     }
   ],
   "outbounds": [
