@@ -1278,9 +1278,8 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "detour": "proxy"
       },
       {
-        "type": "udp",
-        "tag": "dns-local",
-        "server": "195.208.4.1"
+        "type": "local",
+        "tag": "dns-local"
       }
     ],
     "rules": [
