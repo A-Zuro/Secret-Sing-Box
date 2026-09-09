@@ -86,13 +86,13 @@ warp-cli registration license CMD5m479-Y5hS6y79-U06c5mq9
 
 ### Client setup
 
-> [!IMPORTANT]
-> It is recommended to use Sing-Box app due to more complete routing settings, but you can also import the link to [Hiddify](https://github.com/hiddify/hiddify-app/releases/latest) app or use any client app based on Sing-Box or Clash/Mihomo cores.
->
-> When using Sing-Box on some devices, "stack": "system" in tun interface settings in client configs might not work. In such cases, it is recommended to replace it with "gvisor" by using option 4 in the settings menu (see above).
->
-> In Hiddify settings, specify DNS > Outbound domain strategy > IPv4 only. If some apps are not proxied when using Hiddify: Settings > Inbound > Service mode > VPN.
+It is recommended to use Sing-Box app due to more complete routing settings, but you can also import the link to [Hiddify](https://github.com/hiddify/hiddify-app/releases/latest) app or use any client app based on Sing-Box or Clash/Mihomo cores (Xray multiplexing is incompatible with Sing-Box).
 
 [Graphical Sing-Box clients.](GUI-clients-en.md) For Android, iOS, Windows, Linux and macOS. The guide is given for Android, the settings are similar on other OS.
 
 [Sing-Box clients without GUI.](NoGUI-clients-en.md) Setup of pure Sing-Box core for Windows and Linux.
+
+> [!IMPORTANT]
+> When using Sing-Box on some devices, "stack": "system" in tun interface settings in client configs might not work. In such cases, it is recommended to replace it with "gvisor" by using option 4 in the settings menu (see above).
+>
+> In Hiddify settings, specify DNS > Outbound domain strategy > IPv4 only. If some apps are not proxied when using Hiddify: Settings > Inbound > Service mode > VPN.
