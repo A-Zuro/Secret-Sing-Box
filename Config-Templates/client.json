@@ -6,7 +6,7 @@
   "dns": {
     "servers": [
       {
-        "type": "tls",
+        "type": "tcp",
         "tag": "dns-remote",
         "server": "1.1.1.1",
         "detour": "proxy"

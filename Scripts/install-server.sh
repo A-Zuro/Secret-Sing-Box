@@ -1272,7 +1272,7 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
   "dns": {
     "servers": [
       {
-        "type": "tls",
+        "type": "tcp",
         "tag": "dns-remote",
         "server": "1.1.1.1",
         "detour": "proxy"
