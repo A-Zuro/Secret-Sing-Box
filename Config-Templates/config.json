@@ -87,13 +87,6 @@
   "route": {
     "rules": [
       {
-        "action": "sniff"
-      },
-      {
-        "protocol": "dns",
-        "action": "hijack-dns"
-      },
-      {
         "rule_set": [
           "category-ads-all"
         ],

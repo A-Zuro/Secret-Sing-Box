@@ -1158,13 +1158,6 @@ cat > /etc/sing-box/config.json <<EOF
   "route": {
     "rules": [
       {
-        "action": "sniff"
-      },
-      {
-        "protocol": "dns",
-        "action": "hijack-dns"
-      },
-      {
         "rule_set": [
           "category-ads-all"
         ],
