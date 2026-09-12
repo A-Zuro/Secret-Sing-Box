@@ -1158,6 +1158,13 @@ cat > /etc/sing-box/config.json <<EOF
   "route": {
     "rules": [
       {
+        "action": "sniff"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
         "rule_set": [
           "category-ads-all"
         ],
@@ -1265,9 +1272,13 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
   "dns": {
     "servers": [
       {
-        "type": "tcp",
+        "type": "tls",
         "tag": "dns-remote",
         "server": "1.1.1.1",
+        "tls": {
+            "enabled": true,
+            "server_name": "one.one.one.one"
+        },
         "detour": "proxy"
       },
       {

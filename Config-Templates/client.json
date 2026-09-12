@@ -6,9 +6,13 @@
   "dns": {
     "servers": [
       {
-        "type": "tcp",
+        "type": "tls",
         "tag": "dns-remote",
         "server": "1.1.1.1",
+        "tls": {
+            "enabled": true,
+            "server_name": "one.one.one.one"
+        },
         "detour": "proxy"
       },
       {
