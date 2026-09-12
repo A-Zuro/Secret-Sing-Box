@@ -1276,8 +1276,8 @@ cat > /var/www/${subspath}/${user_key}-TRJ-CLIENT.json <<EOF
         "tag": "dns-remote",
         "server": "1.1.1.1",
         "tls": {
-            "enabled": true,
-            "server_name": "one.one.one.one"
+          "enabled": true,
+          "server_name": "one.one.one.one"
         },
         "detour": "proxy"
       },
