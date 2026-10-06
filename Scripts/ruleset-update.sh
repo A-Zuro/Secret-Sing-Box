@@ -6,7 +6,7 @@ ruleset_list=$(ls -A1 /var/www/${rulesetpath} | grep -v ".1")
 for ruleset_num in $(seq 1 $(echo "${ruleset_list}" | wc -l))
 do
     ruleset=$(echo "${ruleset_list}" | sed -n "${ruleset_num}p")
-    wget -q -O /var/www/${rulesetpath}/${ruleset}.1 https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset} && mv -f /var/www/${rulesetpath}/${ruleset}.1 /var/www/${rulesetpath}/${ruleset}
+    wget -q -O /var/www/${rulesetpath}/${ruleset}.1 "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset}" && mv -f /var/www/${rulesetpath}/${ruleset}.1 /var/www/${rulesetpath}/${ruleset}
 done
 
 wget -q -O /var/www/${rulesetpath}/torrent-clients.json.1 https://raw.githubusercontent.com/FPPweb3/sb-rule-sets/main/torrent-clients.json && mv -f /var/www/${rulesetpath}/torrent-clients.json.1 /var/www/${rulesetpath}/torrent-clients.json

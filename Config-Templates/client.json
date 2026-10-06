@@ -6,6 +6,10 @@
   "dns": {
     "servers": [
       {
+        "type": "local",
+        "tag": "dns-local"
+      },
+      {
         "type": "tls",
         "tag": "dns-remote",
         "server": "1.1.1.1",
@@ -14,10 +18,6 @@
           "server_name": "one.one.one.one"
         },
         "detour": "proxy"
-      },
-      {
-        "type": "local",
-        "tag": "dns-local"
       }
     ],
     "rules": [
@@ -154,8 +154,7 @@
         ],
         "server": "dns-remote"
       }
-    ],
-    "final": "dns-local"
+    ]
   },
   "inbounds": [
     {

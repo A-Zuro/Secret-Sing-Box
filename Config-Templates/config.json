@@ -19,8 +19,7 @@
         "action": "predefined",
         "rcode": "NOERROR"
       }
-    ],
-    "final": "dns-main"
+    ]
   },
   "inbounds": [
     {
@@ -74,14 +73,6 @@
       "tag": "warp",
       "server": "127.0.0.1",
       "server_port": 40000
-    },
-    {
-      "type": "direct",
-      "tag": "IPv4",
-      "domain_resolver": {
-        "server": "dns-main",
-        "strategy": "prefer_ipv4"
-      }
     }
   ],
   "route": {
@@ -117,18 +108,11 @@
         "rule_set": [
           "geoip-ru",
           "category-gov-ru",
-          "google-deepmind",
           "openai",
           "anthropic",
           "xai"
         ],
         "outbound": "warp"
-      },
-      {
-        "rule_set": [
-          "google"
-        ],
-        "outbound": "IPv4"
       }
     ],
     "rule_set": [
@@ -149,18 +133,6 @@
         "type": "local",
         "format": "binary",
         "path": "/var/www/RULESETPATH/geosite-category-ads-all.srs"
-      },
-      {
-        "tag": "google",
-        "type": "local",
-        "format": "binary",
-        "path": "/var/www/RULESETPATH/geosite-google.srs"
-      },
-      {
-        "tag": "google-deepmind",
-        "type": "local",
-        "format": "binary",
-        "path": "/var/www/RULESETPATH/geosite-google-deepmind.srs"
       },
       {
         "tag": "openai",

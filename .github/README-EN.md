@@ -18,9 +18,6 @@ This script is designed to fully and quickly configure a secure proxy server wit
 
 Both setup methods make it impossible to detect Sing-Box from the outside, which improves security.
 
-> [!IMPORTANT]
-> Supported OS for the server: Debian 11/12/13 or Ubuntu 22.04/24.04/26.04. Just 512 MB of RAM, 5 GB of disk space and 1 processor core are sufficient. You will also need an IPv4 on the server and your own domain/subdomain ([How to set it up?](cf-settings-en.md)). Run as root on a newly installed system. It's necessary to update and reboot the system before running this script.
-
 > [!NOTE]
 > With routing rules for Russia. Open ports on the server: 443 and SSH.
 >
@@ -42,6 +39,9 @@ Both setup methods make it impossible to detect Sing-Box from the outside, which
 12) Page for convenient distribution of subscriptions ([example](https://a-zuro.github.io/Secret-Sing-Box/sub.html#en))
 
 ### Server setup
+
+> [!IMPORTANT]
+> Supported OS for the server: Debian 11/12/13 or Ubuntu 22.04/24.04/26.04. Just 512 MB of RAM, 5 GB of disk space and 1 processor core are sufficient. You will also need an IPv4 on the server and your own domain/subdomain ([How to set it up?](cf-settings-en.md)). Run as root on a newly installed system. It's necessary to update and reboot the system before running this script.
 
 To setup the server, run this command on it:
 
@@ -76,7 +76,7 @@ Option 5 synchronizes the settings in client configs of all users, which elimina
 
 5.2. Synchronizes settings with the local template, allows to set custom rules in client configs. If new rule sets are added to the configs by using this option, they will be automatically downloaded on the server if they are from [SagerNet](https://github.com/SagerNet/sing-geosite/tree/rule-set).
 
-### WARP+ keys
+### WARP+ keys (if you have)
 
 To activate a WARP+ key, enter this command (replace the key with yours):
 

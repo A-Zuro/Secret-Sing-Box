@@ -29,20 +29,37 @@ enter_language() {
     fi
 }
 
+check_sing_box() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${textcolor}Sing-Box успешно скачан${clear}"
+    check_message[2_ru]="Его можно обновить, удалив файл ${textcolor}${HOME}/sing-box-dir/sing-box${clear} и запустив этот скрипт ещё раз"
+    check_message[3_ru]="${red}Ошибка: не удалось скачать Sing-Box, попробуйте позже${clear}"
+    check_message[1_en]="${textcolor}Sing-Box has been downloaded successfully${clear}"
+    check_message[2_en]="It can be updated by deleting the ${textcolor}${HOME}/sing-box-dir/sing-box${clear} file and running this script again"
+    check_message[3_en]="${red}Error: failed to download Sing-Box, try again later${clear}"
+
+    if ~/sing-box-dir/sing-box version &> /dev/null
+    then
+        echo -e "${check_message[1_$language]}"
+        echo ""
+        echo -e "${check_message[2_$language]}"
+        echo ""
+    else
+        echo ""
+        echo -e "${check_message[3_$language]}"
+        echo ""
+        exit 1
+    fi
+}
+
 download_sing_box() {
     declare -A -g general_message=()
     general_message[1_ru]="${textcolor}Sing-Box не найден в ${HOME}/sing-box-dir/${clear}"
     general_message[2_ru]="${textcolor}[?]${clear} Нажмите ${textcolor}Enter${clear}, чтобы скачать, или введите ${textcolor}x${clear}, чтобы выйти:"
     general_message[3_ru]="${textcolor}Скачивание Sing-Box...${clear}"
-    general_message[4_ru]="${textcolor}Sing-Box успешно скачан${clear}"
-    general_message[5_ru]="Его можно обновить, удалив файл ${textcolor}${HOME}/sing-box-dir/sing-box${clear} и запустив этот скрипт ещё раз"
-    general_message[6_ru]="${red}Ошибка: не удалось скачать Sing-Box, попробуйте позже${clear}"
     general_message[1_en]="${textcolor}Sing-Box was not found in ${HOME}/sing-box-dir/${clear}"
     general_message[2_en]="${textcolor}[?]${clear} Press ${textcolor}Enter${clear} to download it or enter ${textcolor}x${clear} to exit:"
     general_message[3_en]="${textcolor}Downloading Sing-Box...${clear}"
-    general_message[4_en]="${textcolor}Sing-Box has been downloaded successfully${clear}"
-    general_message[5_en]="It can be updated by deleting the ${textcolor}${HOME}/sing-box-dir/sing-box${clear} file and running this script again"
-    general_message[6_en]="${red}Error: failed to download Sing-Box, try again later${clear}"
 
     if [[ ! -f ~/sing-box-dir/sing-box ]]
     then
@@ -59,23 +76,11 @@ download_sing_box() {
         proc_arch="amd64"
         [[ $(uname -m) == "aarch64" || $(uname -m) == "arm64" ]] && proc_arch="arm64"
         zip_url=$(curl -Ls https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep "browser_download_url.*linux-${proc_arch}.tar.gz" | head -n 1 | cut -d '"' -f 4)
-        wget -O ~/sing-box-dir/sing-box.tar.gz ${zip_url}
+        wget -O ~/sing-box-dir/sing-box.tar.gz "${zip_url}"
         tar -xf ~/sing-box-dir/sing-box.tar.gz --strip-components=1 -C ~/sing-box-dir
         rm -f ~/sing-box-dir/sing-box.tar.gz
         chmod +x ~/sing-box-dir/sing-box
-
-        if ~/sing-box-dir/sing-box version &> /dev/null
-        then
-            echo -e "${general_message[4_$language]}"
-            echo ""
-            echo -e "${general_message[5_$language]}"
-            echo ""
-        else
-            echo ""
-            echo -e "${general_message[6_$language]}"
-            echo ""
-            exit 1
-        fi
+        check_sing_box
     fi
 }
 
@@ -95,79 +100,67 @@ show_proxies() {
 
 ### OPTION 2 - ADD PROXIES ###
 
-exit_add_proxy() {
-    if [[ ${link,,} =~ ^(x|х)$ ]]
-    then
-        link=""
-        main_menu
-    fi
-}
-
-check_link() {
+enter_check_link() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: ссылка введена неправильно или сервер недоступен${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите ссылку на ваш клиентский конфиг или введите ${textcolor}x${clear}, чтобы выйти:"
-    check_message[1_en]="${red}Error: the link is incorrect or the server is not available${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter your client config link or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите ссылку на ваш клиентский конфиг или введите ${textcolor}x${clear}, чтобы выйти:"
+    check_message[2_ru]="${red}Ошибка: ссылка введена неправильно или сервер недоступен${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter your client config link or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: the link is incorrect or the server is not available${clear}"
 
-    while [[ -z $link ]] || [[ ! $(curl -s "${link}" 2> /dev/null) =~ '"tag": "proxy"' ]]
+    while true
     do
-        if [[ -n $link ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r link
         [[ -n $link ]] && echo ""
-        exit_add_proxy
+        link=${link#*"://"}
+
+        if [[ ${link,,} =~ ^(x|х)$ ]]
+        then
+            link=""
+            main_menu
+        elif [[ -z $link ]]
+        then
+            :
+        elif [[ ! $(curl -s "https://${link}" 2> /dev/null) =~ '"tag": "proxy"' ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
 }
 
-check_command_add() {
+enter_check_command_add() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: команда должна содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: эта команда уже существует${clear}"
-    check_message[3_ru]="${textcolor}[?]${clear} Введите команду для нового прокси:"
-    check_message[1_en]="${red}Error: the command should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: this command already exists${clear}"
-    check_message[3_en]="${textcolor}[?]${clear} Enter the command for the new proxy:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите команду для нового прокси:"
+    check_message[2_ru]="${red}Ошибка: команда должна содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: эта команда уже существует${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the command for the new proxy:"
+    check_message[2_en]="${red}Error: the command should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: this command already exists${clear}"
 
-    while [[ ! $new_comm =~ ^[a-zA-Z0-9_-]+$ ]] || [[ -f ~/sing-box-dir/${new_comm}.sh ]] || type ${new_comm} &> /dev/null
+    while true
     do
+        echo -e "${check_message[1_$language]}"
+        read -r new_comm
+        [[ -n $new_comm ]] && echo ""
+
         if [[ -z $new_comm ]]
         then
             :
         elif [[ ! $new_comm =~ ^[a-zA-Z0-9_-]+$ ]]
         then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        else
             echo -e "${check_message[2_$language]}"
             echo ""
+        elif [[ -f ~/sing-box-dir/${new_comm}.sh ]] || type ${new_comm} &> /dev/null
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        else
+            break
         fi
-        echo -e "${check_message[3_$language]}"
-        read -r new_comm
-        [[ -n $new_comm ]] && echo ""
     done
-}
-
-enter_proxy_data_add() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите ссылку на ваш клиентский конфиг или введите ${textcolor}x${clear}, чтобы выйти:"
-    input_message[2_ru]="${textcolor}[?]${clear} Введите команду для нового прокси:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter your client config link or enter ${textcolor}x${clear} to exit:"
-    input_message[2_en]="${textcolor}[?]${clear} Enter the command for the new proxy:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r link
-    [[ -n $link ]] && echo ""
-    exit_add_proxy
-    check_link
-    echo -e "${input_message[2_$language]}"
-    read -r new_comm
-    [[ -n $new_comm ]] && echo ""
-    check_command_add
 }
 
 client_script_add() {
@@ -204,9 +197,9 @@ client_script_add() {
 	echo -e "${info_message[4_$language]}"
 	echo ""
 
-	link="${link}"
+	link="https://${link}"
 	cd "${HOME}/sing-box-dir" || exit 1
-	wget -q -O client.json.1 \${link} && mv -f client.json.1 client.json
+	wget -q -O client.json.1 "\${link}" && mv -f client.json.1 client.json
 	./sing-box run -c client.json
 	EOF
 
@@ -220,52 +213,42 @@ client_script_add() {
 add_proxies() {
     while [[ ! ${link,,} =~ ^(x|х)$ ]]
     do
-        enter_proxy_data_add
+        enter_check_link
+        enter_check_command_add
         client_script_add
     done
 }
 
 ### OPTION 3 - DELETE PROXIES ###
 
-exit_del_proxy() {
-    if [[ ${del_comm,,} =~ ^(x|х)$ ]]
-    then
-        del_comm=""
-        main_menu
-    fi
-}
-
-check_command_del() {
+enter_check_command_del() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: эта команда не существует в ${HOME}/sing-box-dir/${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите удаляемую команду для прокси или введите ${textcolor}x${clear}, чтобы выйти:"
-    check_message[1_en]="${red}Error: this command does not exist in ${HOME}/sing-box-dir/${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter the proxy command you want to delete or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите удаляемую команду для прокси или введите ${textcolor}x${clear}, чтобы выйти:"
+    check_message[2_ru]="${red}Ошибка: эта команда не существует в ${HOME}/sing-box-dir/${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the proxy command you want to delete or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: this command does not exist in ${HOME}/sing-box-dir/${clear}"
 
-    while [[ -z $del_comm ]] || [[ ! -f ~/sing-box-dir/${del_comm}.sh ]]
+    while true
     do
-        if [[ -n $del_comm ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r del_comm
         [[ -n $del_comm ]] && echo ""
-        exit_del_proxy
+
+        if [[ ${del_comm,,} =~ ^(x|х)$ ]]
+        then
+            del_comm=""
+            main_menu
+        elif [[ -z $del_comm ]]
+        then
+            :
+        elif [[ ! -f ~/sing-box-dir/${del_comm}.sh ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_proxy_data_del() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите удаляемую команду для прокси или введите ${textcolor}x${clear}, чтобы выйти:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter the proxy command you want to delete or enter ${textcolor}x${clear} to exit:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r del_comm
-    [[ -n $del_comm ]] && echo ""
-    exit_del_proxy
-    check_command_del
 }
 
 client_script_del() {
@@ -282,7 +265,7 @@ client_script_del() {
 delete_proxies() {
     while [[ ! ${del_comm,,} =~ ^(x|х)$ ]]
     do
-        enter_proxy_data_del
+        enter_check_command_del
         client_script_del
     done
 }

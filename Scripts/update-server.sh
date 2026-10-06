@@ -24,8 +24,7 @@ check_update() {
     info_message[2_en]="Current version:"
     info_message[3_en]="New version is available:"
 
-    [[ ! $language =~ ^[a-z]+$ ]] && language="ru"   # Legacy
-    new_version="1.5.3"
+    new_version="1.5.4"
 
     if [[ "$version" == "$new_version" ]]
     then
@@ -82,8 +81,8 @@ insert_values() {
     if [[ -n $chain_outbound ]]
     then
         insert_chain
-        rule_sets_add=(telegram)
-        rule_sets_del=(google-deepmind openai anthropic xai)
+        rule_sets_add=(telegram google)
+        rule_sets_del=(openai anthropic xai)
     else
         rule_sets_add=()
         rule_sets_del=()
@@ -108,16 +107,6 @@ insert_chain() {
     chain_rule='{"inbound":["trojan-in","vless-in"],"outbound":"proxy"}'
     [[ -f /etc/haproxy/auth.lua ]] && chain_rule='{"inbound":["trojan-in"],"outbound":"proxy"}'
     echo "$(jq ".outbounds += [${chain_outbound}] | .route.rules += [${chain_rule}]" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-
-    if [[ $(jq 'any(.outbounds[]; .tag == "IPv4")' /etc/sing-box/config.json) == "true" ]]
-    then
-        echo "$(jq 'del(.outbounds[] | select(.tag == "IPv4"))' /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
-    if [[ $(jq 'any(.route.rules[]; .outbound == "IPv4")' /etc/sing-box/config.json) == "true" ]]
-    then
-        echo "$(jq 'del(.route.rules[] | select(.outbound == "IPv4"))' /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
 }
 
 manage_rule_sets() {
@@ -140,7 +129,7 @@ manage_rule_sets() {
 
         if [[ ! -f /var/www/${rulesetpath}/geosite-${ruleset_tag}.srs ]]
         then
-            wget -q -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-${ruleset_tag}.srs
+            wget -q -P /var/www/${rulesetpath} "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-${ruleset_tag}.srs"
         fi
     done
 
@@ -160,9 +149,7 @@ update_services() {
 
     echo ""
     echo -e "${info_message[1_$language]}"
-    systemctl stop sing-box.service
-    systemctl stop warp-svc.service
-    systemctl stop nginx.service
+    systemctl stop sing-box.service warp-svc.service nginx.service
     [[ -f /etc/haproxy/auth.lua ]] && systemctl stop haproxy.service
     [[ -f /etc/apt/apt.conf.d/50unattended-upgrades ]] && systemctl stop unattended-upgrades.service
 
@@ -186,13 +173,25 @@ update_services() {
     apt-mark hold sing-box
     apt autoremove -y; apt autoclean -y
     systemctl daemon-reload
-
-    systemctl start sing-box.service
-    systemctl start warp-svc.service
-    systemctl start nginx.service
-    [[ -f /etc/haproxy/auth.lua ]] && systemctl start haproxy.service
-    [[ -f /etc/apt/apt.conf.d/50unattended-upgrades ]] && systemctl start unattended-upgrades.service
     echo ""
+
+    systemctl start sing-box.service warp-svc.service nginx.service
+    systemctl status sing-box.service warp-svc.service nginx.service --no-pager -l -n 5
+    echo ""
+
+    if [[ -f /etc/haproxy/auth.lua ]]
+    then
+        systemctl start haproxy.service
+        systemctl status haproxy.service --no-pager -l -n 5
+        echo ""
+    fi
+
+    if [[ -f /etc/apt/apt.conf.d/50unattended-upgrades ]]
+    then
+        systemctl start unattended-upgrades.service
+        systemctl status unattended-upgrades.service --no-pager -l -n 5
+        echo ""
+    fi
 }
 
 check_sync_client() {
@@ -202,12 +201,12 @@ check_sync_client() {
 
     echo -e "${info_message[1_$language]}"
     check_users
-    declare -f check_github_template &> /dev/null && check_github_template || validate_template   # Legacy
+    check_github_template
 
     if [[ "$stop_sync" != "1" ]]
     then
         sync_template_file="template.json"
-        declare -f sync_client_configs_main &> /dev/null && sync_client_configs_main || sync_client_configs_github   # Legacy
+        sync_client_configs_main
     fi
 }
 
@@ -233,9 +232,6 @@ update_scripts() {
     wget -O /usr/local/bin/sbmanager https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/sb-manager.sh
     wget -O /usr/local/bin/rsupdate https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/Scripts/ruleset-update.sh
     chmod +x /usr/local/bin/sbmanager /usr/local/bin/rsupdate
-    grep -q "alias ssb=" /etc/bash.bashrc || echo "alias ssb='/usr/local/bin/sbmanager'" >> /etc/bash.bashrc   # Legacy
-    grep -q "alias sudo=" /etc/bash.bashrc || echo "alias sudo='sudo '" >> /etc/bash.bashrc   # Legacy
-    [[ ! $(crontab -l) =~ "PATH=" ]] && crontab -l | sed '1i PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin' | crontab -   # Legacy
     echo ""
 }
 

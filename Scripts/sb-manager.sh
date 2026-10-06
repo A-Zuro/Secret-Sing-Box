@@ -151,115 +151,97 @@ show_users() {
 
 ### OPTION 2 - ADD USERS ###
 
-exit_username() {
-    if [[ ${username,,} =~ ^(x|х)$ ]]
-    then
-        username=""
-        main_menu
-    fi
-}
-
-check_username_add() {
+enter_check_username_add() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: имя пользователя должно содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: пользователь с таким именем уже существует${clear}"
-    check_message[3_ru]="${textcolor}[?]${clear} Введите имя нового пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
-    check_message[1_en]="${red}Error: the username should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: this user already exists${clear}"
-    check_message[3_en]="${textcolor}[?]${clear} Enter the name of the new user or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите имя нового пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
+    check_message[2_ru]="${red}Ошибка: имя пользователя должно содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: пользователь с таким именем уже существует${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the name of the new user or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: the username should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: this user already exists${clear}"
 
-    while ([[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]] || [[ -f /var/www/${subspath}/${username}-TRJ-CLIENT.json ]] || [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "false" ]]) && [[ -n $username ]]
+    while true
     do
-        if [[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]]
+        echo -e "${check_message[1_$language]}"
+        read -r username
+        [[ -n $username ]] && echo ""
+
+        if [[ ${username,,} =~ ^(x|х)$ ]]
         then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        else
+            username=""
+            main_menu
+        elif [[ ! $username =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $username ]]
+        then
             echo -e "${check_message[2_$language]}"
+            echo ""
+        elif ([[ -f /var/www/${subspath}/${username}-TRJ-CLIENT.json ]] || [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "false" ]]) && [[ -n $username ]]
+        then
+            echo -e "${check_message[3_$language]}"
             echo -e "${red}https://${domain}/${subspath}/${username}-TRJ-CLIENT.json${clear}"
             [[ ! -f /etc/haproxy/auth.lua ]] && echo -e "${red}https://${domain}/${subspath}/${username}-VLESS-CLIENT.json${clear}"
             echo ""
+        else
+            break
         fi
-        echo -e "${check_message[3_$language]}"
-        read -r username
-        [[ -n $username ]] && echo ""
-        exit_username
     done
 }
 
-check_trjpass() {
+enter_check_trjpass() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: пароль Trojan не должен содержать кавычки \"${clear}"
-    check_message[2_ru]="${red}Ошибка: этот пароль уже закреплён за другим пользователем${clear}"
-    check_message[3_ru]="${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
-    check_message[1_en]="${red}Error: Trojan password should not contain quotes \"${clear}"
-    check_message[2_en]="${red}Error: this password is already assigned to another user${clear}"
-    check_message[3_en]="${textcolor}[?]${clear} Enter the password for Trojan or leave this empty to generate a random password:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
+    check_message[2_ru]="${red}Ошибка: пароль Trojan не должен содержать кавычки \"${clear}"
+    check_message[3_ru]="${red}Ошибка: этот пароль уже закреплён за другим пользователем${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the password for Trojan or leave this empty to generate a random password:"
+    check_message[2_en]="${red}Error: Trojan password should not contain quotes \"${clear}"
+    check_message[3_en]="${red}Error: this password is already assigned to another user${clear}"
 
-    while ([[ $trjpass =~ '"' ]] || [[ $(jq "any(.inbounds[].users[]; .password == \"${trjpass}\")" /etc/sing-box/config.json) != "false" ]]) && [[ -n $trjpass ]]
+    while true
     do
-        if [[ $trjpass =~ '"' ]]
-        then
-            echo -e "${check_message[1_$language]}"
-        else
-            echo -e "${check_message[2_$language]}"
-        fi
-        echo ""
-        echo -e "${check_message[3_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r trjpass
         [[ -n $trjpass ]] && echo ""
-    done
-}
 
-check_uuid() {
-    declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: введённое значение не является UUID${clear}"
-    check_message[2_ru]="${red}Ошибка: этот UUID уже закреплён за другим пользователем${clear}"
-    check_message[3_ru]="${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
-    check_message[1_en]="${red}Error: this is not an UUID${clear}"
-    check_message[2_en]="${red}Error: this UUID is already assigned to another user${clear}"
-    check_message[3_en]="${textcolor}[?]${clear} Enter the UUID for VLESS or leave this empty to generate a random UUID:"
-
-    while ([[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]] || [[ $(jq "any(.inbounds[].users[]; .uuid == \"${uuid}\")" /etc/sing-box/config.json) != "false" ]]) && [[ -n $uuid ]]
-    do
-        if [[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]]
+        if [[ $trjpass =~ '"' ]]
         then
-            echo -e "${check_message[1_$language]}"
-        else
             echo -e "${check_message[2_$language]}"
+            echo ""
+        elif [[ $(jq "any(.inbounds[].users[]; .password == \"${trjpass}\")" /etc/sing-box/config.json) != "false" ]] && [[ -n $trjpass ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        else
+            break
         fi
-        echo ""
-        echo -e "${check_message[3_$language]}"
-        read -r uuid
-        [[ -n $uuid ]] && echo ""
     done
 }
 
-enter_user_data_add() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите имя нового пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
-    input_message[2_ru]="${textcolor}[?]${clear} Введите пароль для Trojan или оставьте пустым для генерации случайного пароля:"
-    input_message[3_ru]="${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter the name of the new user or enter ${textcolor}x${clear} to exit:"
-    input_message[2_en]="${textcolor}[?]${clear} Enter the password for Trojan or leave this empty to generate a random password:"
-    input_message[3_en]="${textcolor}[?]${clear} Enter the UUID for VLESS or leave this empty to generate a random UUID:"
+enter_check_uuid() {
+    declare -A -g check_message=()
+    check_message[1_ru]="${textcolor}[?]${clear} Введите UUID для VLESS или оставьте пустым для генерации случайного UUID:"
+    check_message[2_ru]="${red}Ошибка: введённое значение не является UUID${clear}"
+    check_message[3_ru]="${red}Ошибка: этот UUID уже закреплён за другим пользователем${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the UUID for VLESS or leave this empty to generate a random UUID:"
+    check_message[2_en]="${red}Error: this is not an UUID${clear}"
+    check_message[3_en]="${red}Error: this UUID is already assigned to another user${clear}"
 
-    echo -e "${input_message[1_$language]}"
-    read -r username
-    [[ -n $username ]] && echo ""
-    exit_username
-    check_username_add
-    echo -e "${input_message[2_$language]}"
-    read -r trjpass
-    [[ -n $trjpass ]] && echo ""
-    check_trjpass
-    if [[ ! -f /etc/haproxy/auth.lua ]]
-    then
-        echo -e "${input_message[3_$language]}"
+    while true
+    do
+        echo -e "${check_message[1_$language]}"
         read -r uuid
         [[ -n $uuid ]] && echo ""
-        check_uuid
-    fi
+
+        if [[ ! $uuid =~ ^\{?[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}\}?$ ]] && [[ -n $uuid ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        elif [[ $(jq "any(.inbounds[].users[]; .uuid == \"${uuid}\")" /etc/sing-box/config.json) != "false" ]] && [[ -n $uuid ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        else
+            break
+        fi
+    done
 }
 
 generate_pass() {
@@ -318,7 +300,9 @@ add_users() {
 
     while [[ ! ${username,,} =~ ^(x|х)$ ]]
     do
-        enter_user_data_add
+        enter_check_username_add
+        enter_check_trjpass
+        [[ ! -f /etc/haproxy/auth.lua ]] && enter_check_uuid
         generate_pass
         add_to_auth_lua
         add_to_server_conf
@@ -328,37 +312,34 @@ add_users() {
 
 ### OPTION 3 - DELETE USERS ###
 
-check_username_del() {
+enter_check_username_del() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: пользователь с таким именем не существует${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите имя пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
-    check_message[1_en]="${red}Error: a user with this name does not exist${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter the name of the user or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите имя пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
+    check_message[2_ru]="${red}Ошибка: пользователь с таким именем не существует${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the name of the user or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: a user with this name does not exist${clear}"
 
-    while [[ -z $username ]] || [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "true" ]]
+    while true
     do
-        if [[ -n $username ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r username
         [[ -n $username ]] && echo ""
-        exit_username
+
+        if [[ ${username,,} =~ ^(x|х)$ ]]
+        then
+            username=""
+            main_menu
+        elif [[ -z $username ]]
+        then
+            :
+        elif [[ $(jq "any(.inbounds[].users[]; .name == \"${username}\")" /etc/sing-box/config.json) != "true" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_user_data_del() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите имя пользователя или введите ${textcolor}x${clear}, чтобы закончить:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter the name of the user or enter ${textcolor}x${clear} to exit:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r username
-    [[ -n $username ]] && echo ""
-    exit_username
-    check_username_del
 }
 
 del_from_conf() {
@@ -387,7 +368,7 @@ del_from_auth_lua() {
 delete_users() {
     while [[ ! ${username,,} =~ ^(x|х)$ ]]
     do
-        enter_user_data_del
+        enter_check_username_del
         del_from_auth_lua
         del_from_conf
     done
@@ -468,7 +449,7 @@ edit_configs_stack() {
 change_stack() {
     while [[ ! ${username,,} =~ ^(x|х)$ ]]
     do
-        enter_user_data_del
+        enter_check_username_del
         get_stack_sel
         stack_text_${language}
         edit_configs_stack
@@ -544,7 +525,7 @@ add_rule_sets_loop() {
     for ruleset_ind in $(seq 0 $(jq '.route.rule_set | length - 1' /var/www/${subspath}/${sync_template_file}))
     do
         ruleset=$(jq -r ".route.rule_set[${ruleset_ind}].url" /var/www/${subspath}/${sync_template_file} | cut -d "/" -f 5)
-        [[ ! -f /var/www/${rulesetpath}/${ruleset} ]] && wget -q -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset}
+        [[ ! -f /var/www/${rulesetpath}/${ruleset} ]] && wget -q -P /var/www/${rulesetpath} "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/${ruleset}"
     done
 }
 
@@ -692,35 +673,30 @@ check_cf_option() {
     done
 }
 
-check_cf_ip() {
+enter_check_cf_ip() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: введённое значение не является IP${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите выбранный IP Cloudflare:"
-    check_message[1_en]="${red}Error: the entered value is not an IP${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter the custom Cloudflare IP:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите выбранный IP Cloudflare:"
+    check_message[2_ru]="${red}Ошибка: введённое значение не является IP${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the custom Cloudflare IP:"
+    check_message[2_en]="${red}Error: the entered value is not an IP${clear}"
 
-    while [[ ! $cf_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+    while true
     do
-        if [[ -n $cf_ip ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r cf_ip
         [[ -n $cf_ip ]] && echo ""
+
+        if [[ -z $cf_ip ]]
+        then
+            :
+        elif [[ ! $cf_ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_cf_ip() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите выбранный IP Cloudflare:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter the custom Cloudflare IP:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r cf_ip
-    [[ -n $cf_ip ]] && echo ""
-    check_cf_ip
 }
 
 set_cf_ip() {
@@ -806,14 +782,14 @@ cf_ip_settings() {
 
     while [[ ! ${username,,} =~ ^(x|х)$ ]]
     do
-        enter_user_data_del
+        enter_check_username_del
         get_cf_ip_status
         cf_text_${language}
         check_cf_option
 
         case $cf_option in
             1)
-            enter_cf_ip
+            enter_check_cf_ip
             set_cf_ip
             ;;
             2)
@@ -854,52 +830,40 @@ show_warp_domains() {
 
 ### OPTION 8 - ADD WARP DOMAINS ###
 
-exit_warp_add() {
-    if [[ ${new_warp,,} =~ ^(x|х)$ ]]
-    then
-        new_warp=""
-        main_menu
-    fi
-}
-
 crop_new_warp() {
     new_warp=${new_warp#*"://"}
     new_warp=$(echo "${new_warp}" | cut -d "/" -f 1)
 }
 
-check_domain_warp_add() {
+enter_check_domain_warp_add() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: этот домен/суффикс уже добавлен в WARP${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите новый домен/суффикс для WARP или введите ${textcolor}x${clear}, чтобы закончить:"
-    check_message[1_en]="${red}Error: this domain/suffix is already added to WARP${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter a new domain/suffix for WARP routing or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите новый домен/суффикс для WARP или введите ${textcolor}x${clear}, чтобы закончить:"
+    check_message[2_ru]="${red}Ошибка: этот домен/суффикс уже добавлен в WARP${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter a new domain/suffix for WARP routing or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: this domain/suffix is already added to WARP${clear}"
 
-    while [[ -z $new_warp ]] || [[ $(jq "any(.route.rules[] | select(.outbound == \"warp\") | .domain_suffix[]; . == \"${new_warp}\")" /etc/sing-box/config.json) != "false" ]]
+    while true
     do
-        if [[ -n $new_warp ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r new_warp
         [[ -n $new_warp ]] && echo ""
-        exit_warp_add
         crop_new_warp
+
+        if [[ ${new_warp,,} =~ ^(x|х)$ ]]
+        then
+            new_warp=""
+            main_menu
+        elif [[ -z $new_warp ]]
+        then
+            :
+        elif [[ $(jq "any(.route.rules[] | select(.outbound == \"warp\") | .domain_suffix[]; . == \"${new_warp}\")" /etc/sing-box/config.json) != "false" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_domain_warp_add() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите новый домен/суффикс для WARP или введите ${textcolor}x${clear}, чтобы закончить:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter a new domain/suffix for WARP routing or enter ${textcolor}x${clear} to exit:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r new_warp
-    [[ -n $new_warp ]] && echo ""
-    exit_warp_add
-    crop_new_warp
-    check_domain_warp_add
 }
 
 edit_conf_warp_add() {
@@ -919,59 +883,47 @@ add_warp_domains() {
 
     while [[ ! ${new_warp,,} =~ ^(x|х)$ ]]
     do
-        enter_domain_warp_add
+        enter_check_domain_warp_add
         edit_conf_warp_add
     done
 }
 
 ### OPTION 9 - DELETE WARP DOMAINS ###
 
-exit_warp_del() {
-    if [[ ${del_warp,,} =~ ^(x|х)$ ]]
-    then
-        del_warp=""
-        main_menu
-    fi
-}
-
 crop_del_warp() {
     del_warp=${del_warp#*"://"}
     del_warp=$(echo "${del_warp}" | cut -d "/" -f 1)
 }
 
-check_domain_warp_del() {
+enter_check_domain_warp_del() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: этот домен/суффикс не добавлен в WARP${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите домен/суффикс для удаления из WARP или введите ${textcolor}x${clear}, чтобы закончить:"
-    check_message[1_en]="${red}Error: this domain/suffix is not added to WARP routing${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter a domain/suffix to delete from WARP routing or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите домен/суффикс для удаления из WARP или введите ${textcolor}x${clear}, чтобы закончить:"
+    check_message[2_ru]="${red}Ошибка: этот домен/суффикс не добавлен в WARP${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter a domain/suffix to delete from WARP routing or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: this domain/suffix is not added to WARP routing${clear}"
 
-    while [[ -z $del_warp ]] || [[ $(jq "any(.route.rules[] | select(.outbound == \"warp\") | .domain_suffix[]; . == \"${del_warp}\")" /etc/sing-box/config.json) != "true" ]]
+    while true
     do
-        if [[ -n $del_warp ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r del_warp
         [[ -n $del_warp ]] && echo ""
-        exit_warp_del
         crop_del_warp
+
+        if [[ ${del_warp,,} =~ ^(x|х)$ ]]
+        then
+            del_warp=""
+            main_menu
+        elif [[ -z $del_warp ]]
+        then
+            :
+        elif [[ $(jq "any(.route.rules[] | select(.outbound == \"warp\") | .domain_suffix[]; . == \"${del_warp}\")" /etc/sing-box/config.json) != "true" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_domain_warp_del() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите домен/суффикс для удаления из WARP или введите ${textcolor}x${clear}, чтобы закончить:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter a domain/suffix to delete from WARP routing or enter ${textcolor}x${clear} to exit:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r del_warp
-    [[ -n $del_warp ]] && echo ""
-    exit_warp_del
-    crop_del_warp
-    check_domain_warp_del
 }
 
 edit_conf_warp_del() {
@@ -991,20 +943,12 @@ delete_warp_domains() {
 
     while [[ ! ${del_warp,,} =~ ^(x|х)$ ]]
     do
-        enter_domain_warp_del
+        enter_check_domain_warp_del
         edit_conf_warp_del
     done
 }
 
 ### OPTION 10 - SETUP PROXY CHAINS ###
-
-exit_enter_next_link() {
-    if [[ ${next_link,,} =~ ^(x|х)$ ]]
-    then
-        next_link=""
-        main_menu
-    fi
-}
 
 check_chain_option() {
     declare -A -g check_message=()
@@ -1032,39 +976,39 @@ check_config_temp() {
     fi
 }
 
-check_next_link() {
+enter_check_next_link() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: неверная ссылка на конфиг или следующий сервер не отвечает${clear}"
-    check_message[2_ru]="${textcolor}[?]${clear} Введите ссылку на клиентский конфиг со следующего сервера в цепочке или введите ${textcolor}x${clear}, чтобы выйти:"
-    check_message[1_en]="${red}Error: invalid link to client config or the next server does not respond${clear}"
-    check_message[2_en]="${textcolor}[?]${clear} Enter the link to client config from the next server in the chain or enter ${textcolor}x${clear} to exit:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите ссылку на клиентский конфиг со следующего сервера в цепочке или введите ${textcolor}x${clear}, чтобы выйти:"
+    check_message[2_ru]="${red}Ошибка: неверная ссылка на конфиг или следующий сервер не отвечает${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter the link to client config from the next server in the chain or enter ${textcolor}x${clear} to exit:"
+    check_message[2_en]="${red}Error: invalid link to client config or the next server does not respond${clear}"
 
-    while [[ -z $next_link ]] || [[ -z $next_config ]] || ! echo "${next_config}" | jq empty &> /dev/null || [[ $(echo "${next_config}" | jq 'any(.outbounds[]; .tag == "proxy")') != "true" ]]
+    while true
     do
-        if [[ -n $next_link ]]
-        then
-            echo -e "${check_message[1_$language]}"
-            echo ""
-        fi
-        echo -e "${check_message[2_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r next_link
         [[ -n $next_link ]] && echo ""
-        exit_enter_next_link
-        next_config=$(curl -s "${next_link}" 2> /dev/null)
+        next_link=${next_link#*"://"}
+
+        if [[ ${next_link,,} =~ ^(x|х)$ ]]
+        then
+            next_link=""
+            main_menu
+        elif [[ -z $next_link ]]
+        then
+            continue
+        fi
+
+        next_config=$(curl -s "https://${next_link}" 2> /dev/null)
+
+        if [[ -z $next_config ]] || ! echo "${next_config}" | jq empty &> /dev/null || [[ $(echo "${next_config}" | jq 'any(.outbounds[]; .tag == "proxy")') != "true" ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_chain_data() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите ссылку на клиентский конфиг со следующего сервера в цепочке или введите ${textcolor}x${clear}, чтобы выйти:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter the link to client config from the next server in the chain or enter ${textcolor}x${clear} to exit:"
-
-    echo -e "${input_message[1_$language]}"
-    read -r next_link
-    [[ -n $next_link ]] && echo ""
-    exit_enter_next_link
-    next_config=$(curl -s "${next_link}" 2> /dev/null)
-    check_next_link
 }
 
 manage_rule_sets() {
@@ -1078,7 +1022,7 @@ manage_rule_sets() {
 
         if [[ ! -f /var/www/${rulesetpath}/geosite-${ruleset_tag}.srs ]]
         then
-            wget -q -P /var/www/${rulesetpath} https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-${ruleset_tag}.srs
+            wget -q -P /var/www/${rulesetpath} "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-${ruleset_tag}.srs"
         fi
     done
 
@@ -1109,20 +1053,8 @@ chain_end() {
 
     echo "$(jq 'del(.outbounds[] | select(.tag == "proxy")) | del(.route.rules[] | select(.outbound == "proxy" or .outbound == "direct"))' /etc/sing-box/config.json)" > /etc/sing-box/config.json
 
-    if [[ $(jq 'any(.outbounds[]; .tag == "IPv4")' /etc/sing-box/config.json) == "false" ]]
-    then
-        ipv4_outbound='{"type":"direct","tag":"IPv4","domain_resolver":{"server":"dns-main","strategy":"prefer_ipv4"}}'
-        echo "$(jq ".outbounds += [${ipv4_outbound}]" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
-    if [[ $(jq 'any(.route.rules[]; .outbound == "IPv4")' /etc/sing-box/config.json) == "false" ]]
-    then
-        ipv4_rule='{"rule_set":["google"],"outbound":"IPv4"}'
-        echo "$(jq ".route.rules += [${ipv4_rule}]" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
-    rule_sets_add=(google-deepmind openai anthropic xai)
-    rule_sets_del=(telegram)
+    rule_sets_add=(openai anthropic xai)
+    rule_sets_del=(telegram google)
     manage_rule_sets
     systemctl reload sing-box.service
     echo "${info_message[1_$language]}"
@@ -1135,19 +1067,17 @@ chain_middle() {
     info_message[1_ru]="Изменение настроек завершено, этот сервер настроен как промежуточный в цепочке"
     info_message[1_en]="Settings changed successfully, this server is configured as intermediate in the chain"
 
-    if [[ $(jq 'any(.route.rules[]; .outbound == "warp")' /etc/sing-box/config.json) == "true" ]]
-    then
-        warp_rule='{"domain_suffix":["example.com"],"outbound":"warp"}'
-        warp_rule_num=$(jq '[.route.rules[].outbound] | index("warp")' /etc/sing-box/config.json)
-        echo "$(jq ".route.rules[${warp_rule_num}] |= ${warp_rule}" /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
     chain_outbound=$(echo "${next_config}" | jq '.outbounds[] | select(.tag == "proxy")')
-    chain_rule='{"inbound":["trojan-in","vless-in"],"outbound":"proxy"}'
-    [[ -f /etc/haproxy/auth.lua ]] && chain_rule='{"inbound":["trojan-in"],"outbound":"proxy"}'
 
     if [[ $(jq 'any(.outbounds[]; .tag == "proxy")' /etc/sing-box/config.json) == "false" ]]
     then
+        if [[ $(jq 'any(.route.rules[]; .outbound == "warp")' /etc/sing-box/config.json) == "true" ]]
+        then
+            warp_rule='{"domain_suffix":["example.com"],"outbound":"warp"}'
+            warp_rule_num=$(jq '[.route.rules[].outbound] | index("warp")' /etc/sing-box/config.json)
+            echo "$(jq ".route.rules[${warp_rule_num}] |= ${warp_rule}" /etc/sing-box/config.json)" > /etc/sing-box/config.json
+        fi
+
         if [[ $(jq 'any(.route.rules[]; .outbound == "direct")' /etc/sing-box/config.json) == "false" ]]
         then
             proxy_rule=$(jq 'limit(1; .route.rules[] | select(.outbound == "proxy"))' /var/www/${subspath}/template.json)
@@ -1155,25 +1085,16 @@ chain_middle() {
             echo "$(jq ".route.rules |= . + [${proxy_rule}, ${direct_rule}]" /etc/sing-box/config.json)" > /etc/sing-box/config.json
         fi
 
+        chain_rule='{"inbound":["trojan-in","vless-in"],"outbound":"proxy"}'
+        [[ -f /etc/haproxy/auth.lua ]] && chain_rule='{"inbound":["trojan-in"],"outbound":"proxy"}'
         echo "$(jq ".outbounds += [${chain_outbound}] | .route.rules += [${chain_rule}]" /etc/sing-box/config.json)" > /etc/sing-box/config.json
     else
         chain_out_num=$(jq '[.outbounds[].tag] | index("proxy")' /etc/sing-box/config.json)
-        chain_rule_num=$(jq '.route.rules | to_entries | map(select(.value.outbound == "proxy")) | last | .key' /etc/sing-box/config.json)
-        echo "$(jq ".outbounds[${chain_out_num}] |= ${chain_outbound} | .route.rules[${chain_rule_num}] |= ${chain_rule}" /etc/sing-box/config.json)" > /etc/sing-box/config.json
+        echo "$(jq ".outbounds[${chain_out_num}] |= ${chain_outbound}" /etc/sing-box/config.json)" > /etc/sing-box/config.json
     fi
 
-    if [[ $(jq 'any(.outbounds[]; .tag == "IPv4")' /etc/sing-box/config.json) == "true" ]]
-    then
-        echo "$(jq 'del(.outbounds[] | select(.tag == "IPv4"))' /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
-    if [[ $(jq 'any(.route.rules[]; .outbound == "IPv4")' /etc/sing-box/config.json) == "true" ]]
-    then
-        echo "$(jq 'del(.route.rules[] | select(.outbound == "IPv4"))' /etc/sing-box/config.json)" > /etc/sing-box/config.json
-    fi
-
-    rule_sets_add=(telegram)
-    rule_sets_del=(google-deepmind openai anthropic xai)
+    rule_sets_add=(telegram google)
+    rule_sets_del=(openai anthropic xai)
     manage_rule_sets
     systemctl reload sing-box.service
     echo "${info_message[1_$language]}"
@@ -1225,7 +1146,7 @@ chain_setup() {
         ;;
         2)
         check_github_template
-        enter_chain_data
+        enter_check_next_link
         chain_middle
         ;;
         *)
@@ -1378,47 +1299,8 @@ exit_change_domain() {
 
 crop_domain() {
     domain=${domain#*"://"}
+    domain=$(echo "${domain}" | cut -d "/" -f 1 | sed -e 's/[[:blank:]]//g' -e 's/\.\{2,\}/./g')
     domain=${domain#"www."}
-    domain=$(echo "${domain}" | cut -d "/" -f 1 | sed 's/[[:blank:]]//g')
-}
-
-get_test_response() {
-    test_domain=$(echo "${domain}" | rev | cut -d "." -f 1-2 | rev)
-
-    if [[ $cf_token =~ [A-Z] ]]
-    then
-        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "Authorization: Bearer ${cf_token}" --header "Content-Type: application/json")
-    else
-        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "X-Auth-Key: ${cf_token}" --header "X-Auth-Email: ${email}" --header "Content-Type: application/json")
-    fi
-}
-
-check_cf_token() {
-    declare -A -g check_message=()
-    check_message[1_ru]="Проверка домена, API токена/ключа и почты..."
-    check_message[2_ru]="${red}Ошибка: неправильно введён домен, API токен/ключ или почта${clear}"
-    check_message[3_ru]="${red}Инструкция: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-ru.md#получение-api-токена-cloudflare${clear}"
-    check_message[4_ru]="Успешно!"
-    check_message[1_en]="Checking domain name, API token/key and email..."
-    check_message[2_en]="${red}Error: invalid domain name, API token/key or email${clear}"
-    check_message[3_en]="${red}Instruction: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-en.md#getting-cloudflare-api-token${clear}"
-    check_message[4_en]="Success!"
-
-    echo "${check_message[1_$language]}"
-    get_test_response
-
-    while [[ $domain =~ ".." ]] || [[ ! $test_response =~ "\"$test_domain\"" ]] || [[ ! $test_response =~ "#dns_records:edit" ]] || [[ ! $test_response =~ "#dns_records:read" ]] || [[ ! $test_response =~ "#zone:read" ]]
-    do
-        echo ""
-        echo -e "${check_message[2_$language]}"
-        echo -e "${check_message[3_$language]}"
-        enter_domain_data
-        echo "${check_message[1_$language]}"
-        get_test_response
-    done
-
-    echo "${check_message[4_$language]}"
-    echo ""
 }
 
 enter_domain_data() {
@@ -1438,14 +1320,17 @@ enter_domain_data() {
 
     domain=""; email=""; cf_token=""
     echo ""
+
     while [[ -z $domain ]]
     do
         echo -e "${input_message[1_$language]}"
         read -r domain
         [[ -n $domain ]] && echo ""
     done
+
     exit_change_domain
     crop_domain
+
     while [[ -z $email ]]
     do
         echo -e "${input_message[2_$language]}"
@@ -1453,6 +1338,7 @@ enter_domain_data() {
         [[ -n $email ]] && echo ""
         email=$(echo "${email}" | sed 's/[[:blank:]]//g')
     done
+
     if [[ "$validation_type" == "1" ]]
     then
         while [[ -z $cf_token ]]
@@ -1464,13 +1350,62 @@ enter_domain_data() {
     fi
 }
 
-issue_cert_dns_cf() {
-    if [[ $cf_token =~ [A-Z] ]]
+get_test_response() {
+    test_domain=$(echo "${domain}" | rev | cut -d "." -f 1-2 | rev)
+
+    if [[ $cf_token =~ ^[a-f0-9]+$|^cfk_ ]]
     then
-        echo "dns_cloudflare_api_token = ${cf_token}" > /etc/letsencrypt/cloudflare.credentials
+        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "X-Auth-Key: ${cf_token}" --header "X-Auth-Email: ${email}" --header "Content-Type: application/json")
     else
+        test_response=$(curl -s --request GET --url https://api.cloudflare.com/client/v4/zones --header "Authorization: Bearer ${cf_token}" --header "Content-Type: application/json")
+    fi
+}
+
+enter_check_domain() {
+    declare -A -g check_message=()
+    check_message[1_ru]="Проверка домена, API токена/ключа и почты..."
+    check_message[2_ru]="${red}Ошибка: неправильно введён домен, API токен/ключ или почта${clear}"
+    check_message[3_ru]="${red}Ошибка: API токен имеет недостаточно прав${clear}"
+    check_message[4_ru]="${red}Инструкция: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-ru.md#получение-api-токена-cloudflare${clear}"
+    check_message[5_ru]="Успешно!"
+    check_message[1_en]="Checking domain name, API token/key and email..."
+    check_message[2_en]="${red}Error: invalid domain name, API token/key or email${clear}"
+    check_message[3_en]="${red}Error: the API token has insufficient permissions${clear}"
+    check_message[4_en]="${red}Instruction: https://github.com/A-Zuro/Secret-Sing-Box/blob/main/.github/cf-settings-en.md#getting-cloudflare-api-token${clear}"
+    check_message[5_en]="Success!"
+
+    while true
+    do
+        enter_domain_data
+        [[ "$validation_type" != "1" ]] && break
+        echo "${check_message[1_$language]}"
+        get_test_response
+
+        if [[ ! $test_response =~ "\"$test_domain\"" ]]
+        then
+            echo ""
+            echo -e "${check_message[2_$language]}"
+            echo -e "${check_message[4_$language]}"
+        elif [[ ! $test_response =~ "#dns_records:edit" ]] || [[ ! $test_response =~ "#dns_records:read" ]] || [[ ! $test_response =~ "#zone:read" ]]
+        then
+            echo ""
+            echo -e "${check_message[3_$language]}"
+            echo -e "${check_message[4_$language]}"
+        else
+            echo "${check_message[5_$language]}"
+            echo ""
+            break
+        fi
+    done
+}
+
+issue_cert_dns_cf() {
+    if [[ $cf_token =~ ^[a-f0-9]+$|^cfk_ ]]
+    then
         echo "dns_cloudflare_email = ${email}" > /etc/letsencrypt/cloudflare.credentials
         echo "dns_cloudflare_api_key = ${cf_token}" >> /etc/letsencrypt/cloudflare.credentials
+    else
+        echo "dns_cloudflare_api_token = ${cf_token}" > /etc/letsencrypt/cloudflare.credentials
     fi
 
     chown root:root /etc/letsencrypt/cloudflare.credentials
@@ -1550,7 +1485,7 @@ get_old_values() {
 
 change_domain_text_ru() {
     echo -e "${red}ВНИМАНИЕ!${clear}"
-    echo "Не забудьте создать А запись для нового домена и заменить домен в ссылках для клиентов"
+    echo "Не забудьте создать А запись для нового домена и заменить домен в ссылках на клиентах"
     echo ""
     echo -e "Текущий домен: ${textcolor}${domain_old}${clear}"
     echo -e "Метод валидации сертификатов: ${textcolor}${validation_old}${clear}"
@@ -1589,8 +1524,7 @@ cert_validation_options() {
 
     case $validation_type in
         1)
-        enter_domain_data
-        check_cf_token
+        enter_check_domain
         cert_clean_up
         issue_cert_dns_cf
         ;;
@@ -1598,7 +1532,7 @@ cert_validation_options() {
         echo ""
         echo -e "${info_message[1_$language]}"
         echo "${info_message[2_$language]}"
-        enter_domain_data
+        enter_check_domain
         cert_clean_up
         issue_cert_standalone
         ;;
@@ -1655,155 +1589,142 @@ old_paths() {
     old_paths_list=("$trojanpath_old" "$vlesspath_old" "$subspath_old" "$rulesetpath_old")
 }
 
-check_trojan_path() {
+enter_check_trojan_path() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
-    check_message[3_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
-    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: the new path should not match with any of the old paths${clear}"
-    check_message[3_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
+    check_message[2_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
+    check_message[2_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
 
-    while ([[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${trojanpath}") && [[ -n $trojanpath ]]
+    while true
     do
-        if [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${check_message[1_$language]}"
-        else
-            echo -e "${check_message[2_$language]}"
-        fi
-        echo ""
-        echo -e "${check_message[3_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r trojanpath
         [[ -n $trojanpath ]] && echo ""
         trojanpath=${trojanpath#"/"}
+
+        if [[ ! $trojanpath =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $trojanpath ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        elif printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${trojanpath}" && [[ -n $trojanpath ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
 }
 
-check_vless_path() {
+enter_check_vless_path() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: пути для Trojan и VLESS должны быть разными${clear}"
-    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
-    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
-    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: paths for Trojan and VLESS must be different${clear}"
-    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
-    check_message[4_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
+    check_message[2_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: пути для Trojan и VLESS должны быть разными${clear}"
+    check_message[4_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
+    check_message[2_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: paths for Trojan and VLESS must be different${clear}"
+    check_message[4_en]="${red}Error: the new path should not match with any of the old paths${clear}"
 
-    while ([[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$vlesspath" == "$trojanpath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${vlesspath}") && [[ -n $vlesspath ]]
+    while true
     do
-        if [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${check_message[1_$language]}"
-        elif [[ "$vlesspath" == "$trojanpath" ]]
-        then
-            echo -e "${check_message[2_$language]}"
-        else
-            echo -e "${check_message[3_$language]}"
-        fi
-        echo ""
-        echo -e "${check_message[4_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r vlesspath
         [[ -n $vlesspath ]] && echo ""
         vlesspath=${vlesspath#"/"}
+
+        if [[ ! $vlesspath =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $vlesspath ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        elif [[ "$vlesspath" == "$trojanpath" ]] && [[ -n $vlesspath ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        elif printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${vlesspath}" && [[ -n $vlesspath ]]
+        then
+            echo -e "${check_message[4_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
 }
 
-check_subscription_path() {
+enter_check_subs_path() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS и подписки должны быть разными${clear}"
-    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
-    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
-    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: paths for Trojan, VLESS and subscription must be different${clear}"
-    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
-    check_message[4_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
+    check_message[2_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: пути для Trojan, VLESS и подписки должны быть разными${clear}"
+    check_message[4_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
+    check_message[2_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: paths for Trojan, VLESS and subscription must be different${clear}"
+    check_message[4_en]="${red}Error: the new path should not match with any of the old paths${clear}"
 
-    while ([[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${subspath}") && [[ -n $subspath ]]
+    while true
     do
-        if [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${check_message[1_$language]}"
-        elif [[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]]
-        then
-            echo -e "${check_message[2_$language]}"
-        else
-            echo -e "${check_message[3_$language]}"
-        fi
-        echo ""
-        echo -e "${check_message[4_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r subspath
         [[ -n $subspath ]] && echo ""
         subspath=${subspath#"/"}
+
+        if [[ ! $subspath =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $subspath ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        elif ([[ "$subspath" == "$trojanpath" ]] || [[ "$subspath" == "$vlesspath" ]]) && [[ -n $subspath ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        elif printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${subspath}" && [[ -n $subspath ]]
+        then
+            echo -e "${check_message[4_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
 }
 
-check_rulesetpath() {
+enter_check_ruleset_path() {
     declare -A -g check_message=()
-    check_message[1_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
-    check_message[2_ru]="${red}Ошибка: пути для Trojan, VLESS, подписки и наборов правил должны быть разными${clear}"
-    check_message[3_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
-    check_message[4_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
-    check_message[1_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
-    check_message[2_en]="${red}Error: paths for Trojan, VLESS, subscription and rule sets must be different${clear}"
-    check_message[3_en]="${red}Error: the new path should not match with any of the old paths${clear}"
-    check_message[4_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
+    check_message[1_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
+    check_message[2_ru]="${red}Ошибка: путь должен содержать только английские буквы, цифры, символы _ и -${clear}"
+    check_message[3_ru]="${red}Ошибка: пути для ${paths_to_change}подписки и наборов правил должны быть разными${clear}"
+    check_message[4_ru]="${red}Ошибка: новый путь не должен совпадать ни с одним из старых путей${clear}"
+    check_message[1_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
+    check_message[2_en]="${red}Error: the path should contain only letters, numbers, _ and - symbols${clear}"
+    check_message[3_en]="${red}Error: paths for ${paths_to_change}subscription and rule sets must be different${clear}"
+    check_message[4_en]="${red}Error: the new path should not match with any of the old paths${clear}"
 
-    while ([[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]] || [[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]] || printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${rulesetpath}") && [[ -n $rulesetpath ]]
+    while true
     do
-        if [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]]
-        then
-            echo -e "${check_message[1_$language]}"
-        elif [[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]]
-        then
-            echo -e "${check_message[2_$language]}"
-        else
-            echo -e "${check_message[3_$language]}"
-        fi
-        echo ""
-        echo -e "${check_message[4_$language]}"
+        echo -e "${check_message[1_$language]}"
         read -r rulesetpath
         [[ -n $rulesetpath ]] && echo ""
         rulesetpath=${rulesetpath#"/"}
+
+        if [[ ! $rulesetpath =~ ^[a-zA-Z0-9_-]+$ ]] && [[ -n $rulesetpath ]]
+        then
+            echo -e "${check_message[2_$language]}"
+            echo ""
+        elif ([[ "$rulesetpath" == "$trojanpath" ]] || [[ "$rulesetpath" == "$vlesspath" ]] || [[ "$rulesetpath" == "$subspath" ]]) && [[ -n $rulesetpath ]]
+        then
+            echo -e "${check_message[3_$language]}"
+            echo ""
+        elif printf '%s\n' "${old_paths_list[@]}" | grep -xFq "${rulesetpath}" && [[ -n $rulesetpath ]]
+        then
+            echo -e "${check_message[4_$language]}"
+            echo ""
+        else
+            break
+        fi
     done
-}
-
-enter_new_paths() {
-    declare -A -g input_message=()
-    input_message[1_ru]="${textcolor}[?]${clear} Введите путь для Trojan или оставьте пустым для генерации случайного пути:"
-    input_message[2_ru]="${textcolor}[?]${clear} Введите путь для VLESS или оставьте пустым для генерации случайного пути:"
-    input_message[3_ru]="${textcolor}[?]${clear} Введите путь для подписки или оставьте пустым для генерации случайного пути:"
-    input_message[4_ru]="${textcolor}[?]${clear} Введите путь для наборов правил (rule sets) или оставьте пустым для генерации случайного пути:"
-    input_message[1_en]="${textcolor}[?]${clear} Enter your path for Trojan or leave this empty to generate a random path:"
-    input_message[2_en]="${textcolor}[?]${clear} Enter your path for VLESS or leave this empty to generate a random path:"
-    input_message[3_en]="${textcolor}[?]${clear} Enter your subscription path or leave this empty to generate a random path:"
-    input_message[4_en]="${textcolor}[?]${clear} Enter your path for rule sets or leave this empty to generate a random path:"
-
-    if [[ ! -f /etc/haproxy/auth.lua ]]
-    then
-        echo -e "${input_message[1_$language]}"
-        read -r trojanpath
-        [[ -n $trojanpath ]] && echo ""
-        trojanpath=${trojanpath#"/"}
-        check_trojan_path
-        echo -e "${input_message[2_$language]}"
-        read -r vlesspath
-        [[ -n $vlesspath ]] && echo ""
-        vlesspath=${vlesspath#"/"}
-        check_vless_path
-    fi
-    echo -e "${input_message[3_$language]}"
-    read -r subspath
-    [[ -n $subspath ]] && echo ""
-    subspath=${subspath#"/"}
-    check_subscription_path
-    echo -e "${input_message[4_$language]}"
-    read -r rulesetpath
-    [[ -n $rulesetpath ]] && echo ""
-    rulesetpath=${rulesetpath#"/"}
-    check_rulesetpath
 }
 
 generate_paths() {
@@ -1856,7 +1777,15 @@ change_paths() {
     change_paths_text_${language}
     exit_change_paths
     old_paths
-    enter_new_paths
+
+    if [[ ! -f /etc/haproxy/auth.lua ]]
+    then
+        enter_check_trojan_path
+        enter_check_vless_path
+    fi
+
+    enter_check_subs_path
+    enter_check_ruleset_path
     generate_paths
     edit_configs_with_paths
     main_menu
@@ -1918,13 +1847,14 @@ show_paths_ru() {
     echo -e "${textcolor}Конфигурация сервисов:${clear}"
     echo "Конфиг Sing-Box                        /etc/sing-box/config.json"
     echo "Конфиг NGINX                           /etc/nginx/nginx.conf"
+
     if [[ -f /etc/haproxy/haproxy.cfg ]]
     then
         echo "Конфиг HAProxy                         /etc/haproxy/haproxy.cfg"
         echo "Скрипт, считывающий пароли Trojan      /etc/haproxy/auth.lua"
     fi
-    echo ""
 
+    echo ""
     echo -e "${textcolor}Контент, доставляемый с помощью NGINX:${clear}"
     echo "Директория подписки                    /var/www/${subspath}/"
     echo "Директория c наборами правил           /var/www/${rulesetpath}/"
@@ -1956,13 +1886,14 @@ show_paths_en() {
     echo -e "${textcolor}Configuration of the services:${clear}"
     echo "Sing-Box config                      /etc/sing-box/config.json"
     echo "NGINX config                         /etc/nginx/nginx.conf"
+
     if [[ -f /etc/haproxy/haproxy.cfg ]]
     then
         echo "HAProxy config                       /etc/haproxy/haproxy.cfg"
         echo "Trojan password reading script       /etc/haproxy/auth.lua"
     fi
-    echo ""
 
+    echo ""
     echo -e "${textcolor}Content delivered by NGINX:${clear}"
     echo "Subscription directory               /var/www/${subspath}/"
     echo "Rule set directory                   /var/www/${rulesetpath}/"
@@ -1996,7 +1927,7 @@ update_ssb() {
 
     if [[ $update_script =~ '#!/bin/bash' ]]
     then
-        export version="1.5.3" language
+        export version="1.5.4" language
         export -f get_ip templates get_data check_users check_github_template get_pass edit_configs_loop add_rule_sets_loop sync_client_configs_main
         bash <(echo "${update_script}")
         exit 0
