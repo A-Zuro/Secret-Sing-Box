@@ -110,7 +110,8 @@
           "category-gov-ru",
           "openai",
           "anthropic",
-          "xai"
+          "xai",
+          "deviantart"
         ],
         "outbound": "warp"
       }
@@ -151,6 +152,12 @@
         "type": "local",
         "format": "binary",
         "path": "/var/www/RULESETPATH/geosite-xai.srs"
+      },
+      {
+        "tag": "deviantart",
+        "type": "local",
+        "format": "binary",
+        "path": "/var/www/RULESETPATH/geosite-deviantart.srs"
       }
     ]
   },

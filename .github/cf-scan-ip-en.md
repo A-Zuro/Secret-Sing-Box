@@ -22,9 +22,9 @@ Use the commands below to:
 - Extract the archive, make the file executable, and run CloudflareScanner.
 
 ```
-ARCH=$(uname -m); case $ARCH in x86_64) FILE="CloudflareScanner_linux-amd64.zip";; aarch64|arm64) FILE="CloudflareScanner_linux-arm64.zip";; armv7l) FILE="CloudflareScanner_linux-arm7.zip";; mips64) FILE="CloudflareScanner_linux-mips64.zip";; mips64le) FILE="CloudflareScanner_linux-mips64le.zip";; riscv64) FILE="CloudflareScanner_linux-riscv64.zip";; *) echo "Unsupported architecture: $ARCH"; exit 1;; esac
-wget "https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/$FILE"
-unzip "$FILE" -d CloudflareScanner && cd CloudflareScanner
+ARCH=$(uname -m); case $ARCH in x86_64) FILE="CloudflareScanner_linux-amd64.zip";; aarch64|arm64) FILE="CloudflareScanner_linux-arm64.zip";; armv7l) FILE="CloudflareScanner_linux-arm7.zip";; mips64) FILE="CloudflareScanner_linux-mips64.zip";; mips64le) FILE="CloudflareScanner_linux-mips64le.zip";; riscv64) FILE="CloudflareScanner_linux-riscv64.zip";; *) echo "Unsupported architecture: ${ARCH}"; exit 1;; esac
+wget -T 300 "https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/${FILE}"
+unzip "${FILE}" -d CloudflareScanner && cd CloudflareScanner
 chmod +x CloudflareScanner
 ./CloudflareScanner
 ```
@@ -69,8 +69,8 @@ Then open the app and use the commands below to:
 
 ```
 pkg install wget -y
-wget "https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/CloudflareScanner_android-arm64.zip"
-unzip "CloudflareScanner_android-arm64.zip" -d CloudflareScanner && cd CloudflareScanner
+wget -T 300 https://github.com/Ptechgithub/CloudflareScanner/releases/latest/download/CloudflareScanner_android-arm64.zip
+unzip CloudflareScanner_android-arm64.zip -d CloudflareScanner && cd CloudflareScanner
 chmod +x CloudflareScanner
 ./CloudflareScanner
 ```

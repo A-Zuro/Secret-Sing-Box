@@ -29,14 +29,6 @@
         "rcode": "NOERROR"
       },
       {
-        "package_name": [
-          "ru.oneme.app",
-          "com.vkontakte.android",
-          "ru.rostel"
-        ],
-        "server": "dns-local"
-      },
-      {
         "process_name": [
           "max.exe",
           "max-service.exe",
@@ -46,7 +38,8 @@
       },
       {
         "rule_set": [
-          "torrent-clients"
+          "torrent-clients",
+          "bypass-apps"
         ],
         "server": "dns-local"
       },
@@ -129,7 +122,6 @@
           "zoom",
           "reddit",
           "twitch",
-          "tumblr",
           "pinterest",
           "duckduckgo",
           "yahoo",
@@ -230,14 +222,6 @@
         "method": "drop"
       },
       {
-        "package_name": [
-          "ru.oneme.app",
-          "com.vkontakte.android",
-          "ru.rostel"
-        ],
-        "outbound": "direct"
-      },
-      {
         "process_name": [
           "max.exe",
           "max-service.exe",
@@ -247,7 +231,8 @@
       },
       {
         "rule_set": [
-          "torrent-clients"
+          "torrent-clients",
+          "bypass-apps"
         ],
         "outbound": "direct"
       },
@@ -333,7 +318,6 @@
           "zoom",
           "reddit",
           "twitch",
-          "tumblr",
           "pinterest",
           "duckduckgo",
           "yahoo",
@@ -374,6 +358,12 @@
         "type": "remote",
         "format": "source",
         "url": "https://DOMAIN/RULESETPATH/torrent-clients.json"
+      },
+      {
+        "tag": "bypass-apps",
+        "type": "remote",
+        "format": "source",
+        "url": "https://DOMAIN/RULESETPATH/bypass-apps.json"
       },
       {
         "tag": "geoip-ru",
@@ -440,12 +430,6 @@
         "type": "remote",
         "format": "binary",
         "url": "https://DOMAIN/RULESETPATH/geosite-twitch.srs"
-      },
-      {
-        "tag": "tumblr",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://DOMAIN/RULESETPATH/geosite-tumblr.srs"
       },
       {
         "tag": "pinterest",

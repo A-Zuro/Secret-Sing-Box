@@ -38,5 +38,3 @@ Then specify the following settings:
 Other settings can be left as is.
 
 After receiving the token, you need to copy and save it, because it will only be shown once.
-
-You can use an API key instead of a token, but this is less secure and not recommended.

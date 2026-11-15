@@ -17,8 +17,8 @@ cd /d "%SING_BOX_DIR%"
 if not exist sing-box.exe (
     echo Downloading Sing-Box...
     echo.
-    for /f "tokens=2 delims= " %%u in ('curl -Ls https://api.github.com/repos/SagerNet/sing-box/releases/latest ^| findstr browser_download_url ^| findstr windows-amd64.zip') do (set "ZIP_URL=%%~u")
-    curl -L -o sing-box.zip "!ZIP_URL!"
+    for /f "tokens=2 delims= " %%u in ('curl -Ls -m 60 https://api.github.com/repos/SagerNet/sing-box/releases/latest ^| findstr browser_download_url ^| findstr windows-amd64.zip') do (set "ZIP_URL=%%~u")
+    curl -L -o sing-box.zip -m 300 "!ZIP_URL!"
     tar -xf sing-box.zip --strip-components=1
     del sing-box.zip
     echo.
@@ -29,7 +29,7 @@ echo Do not close this window while Sing-Box is running
 echo Press Ctrl + C to disconnect
 echo.
 
-curl -s -o client.json "%URL%"
+curl -sf -o client.json -m 60 "%URL%"
 .\sing-box.exe run -c client.json --disable-color
 ```
 
