@@ -108,7 +108,7 @@ insert_chain() {
 }
 
 manage_rule_sets() {
-    [[ ! -f /var/www/${rulesetpath}/bypass-apps.json ]] && wget -P "/var/www/${rulesetpath}" -T 30 https://raw.githubusercontent.com/FPPweb3/sb-rule-sets/main/bypass-apps.json   # Legacy v1.5.5
+    [[ ! -f /var/www/${rulesetpath}/bypass-apps.json ]] && wget -q -P "/var/www/${rulesetpath}" -T 30 https://raw.githubusercontent.com/FPPweb3/sb-rule-sets/main/bypass-apps.json   # Legacy v1.5.5
     local ruleset_ind ruleset_link ruleset ruleset_tag ruleset_data
 
     for ruleset_ind in $(seq 0 "$(jq '.route.rule_set | length - 1' /etc/sing-box/config.json)")
