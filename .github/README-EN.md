@@ -6,7 +6,7 @@
 
 ### Easy setup of a proxy with TLS termination on NGINX or HAProxy
 
-This script is designed to fully and quickly configure a secure proxy server with [Sing-Box](https://sing-box.sagernet.org) core and [NGINX](https://nginx.org/en/) or [HAProxy](https://www.haproxy.org) frontend. To proxy traffic, **Trojan** and **VLESS** protocols are used. Two server setup options:
+This script is designed to fully and quickly configure a secure proxy server with [Sing-Box](https://sing-box.sagernet.org) core and [NGINX](https://nginx.org/en/) or [HAProxy](https://www.haproxy.org) frontend. To proxy traffic, **Trojan-TLS-MUX** and **VLESS-TLS-MUX** protocols are used. Two server setup options:
 
 - All requests to the proxy are received by NGINX, the requests are passed to Sing-Box only if they contain the correct path (WebSocket or HTTPUpgrade transport)
 

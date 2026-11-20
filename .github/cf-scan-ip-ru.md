@@ -40,8 +40,8 @@ cd ~/CloudflareScanner && ./CloudflareScanner
 Для запуска инструмента на macOS выполните следующие шаги:
 
 1) Скачайте файл, соответствующий вашему процессору:
-   - **`CloudflareScanner_darwin-arm64.zip`** — для Mac на Apple Silicon (M1, M2 и новее).
-   - **`CloudflareScanner_darwin-amd64.zip`** — для Mac на Intel.
+   - `CloudflareScanner_darwin-arm64.zip` — для Mac на Apple Silicon (M1, M2 и новее).
+   - `CloudflareScanner_darwin-amd64.zip` — для Mac на Intel.
 
 2) Распакуйте скачанный архив в удобную папку, например, `Downloads`.
 
