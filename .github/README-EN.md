@@ -51,7 +51,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/A-Zuro/Secret-Sing-Box/master/
 
 Then just enter the necessary information:
 
-![pic-1-en](https://github.com/user-attachments/assets/b5eadb50-82e7-4d0b-98d3-e775249fbea9)
+![pic-1-en](https://github.com/user-attachments/assets/6c03d979-44e6-48d1-932c-6d7e0243574e)
 
 > [!CAUTION]
 > Passwords, UUIDs, paths and other data in the image above are for example purposes only. Do not use them on your server.
