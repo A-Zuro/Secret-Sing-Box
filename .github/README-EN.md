@@ -6,7 +6,7 @@
 
 ### Easy setup of a proxy with TLS termination on NGINX or HAProxy
 
-This script is designed to fully and quickly configure a secure proxy server with [Sing-Box](https://sing-box.sagernet.org) core and [NGINX](https://nginx.org/en/) or [HAProxy](https://www.haproxy.org) frontend. To proxy traffic, **Trojan-TLS-MUX** and **VLESS-TLS-MUX** protocols are used. Two server setup options:
+This script is designed to fully and quickly configure a secure proxy server with [Sing-Box](https://sing-box.sagernet.org) core and [NGINX](https://nginx.org/en/) or [HAProxy](https://www.haproxy.org) frontend. To proxy traffic, **Trojan-TLS-MUX** and **VLESS-TLS-MUX** protocols are used. The script configures the minimum set of services required for the proxy to work (see below). Two server setup options are available:
 
 - All requests to the proxy are received by NGINX, the requests are passed to Sing-Box only if they contain the correct path (WebSocket or HTTPUpgrade transport)
 
@@ -31,7 +31,7 @@ Both setup methods make it impossible to detect Sing-Box from the outside, which
 4) Security setup (SSH, UFW and unattended-upgrades) — optional
 5) Multiplexing to optimise connections and to solve TLS in TLS problem
 6) Enable BBR
-7) WARP setup
+7) Cloudflare WARP setup
 8) Optional setup of proxy chains of two or more servers
 9) An option to setup connection to custom Cloudflare IP on the client
 10) Client Sing-Box configs (v1.14.0+) with routing rules for Russia
@@ -41,7 +41,7 @@ Both setup methods make it impossible to detect Sing-Box from the outside, which
 ### Server setup
 
 > [!IMPORTANT]
-> Supported OS for the server: Debian 12/13 or Ubuntu 22.04/24.04/26.04. Just 512 MB of RAM, 5 GB of disk space and 1 processor core are sufficient. You will also need an IPv4 on the server and your own domain/subdomain ([How to set it up?](cf-settings-en.md)). Run as root on a newly installed system. It's necessary to update and reboot the system before running this script.
+> Supported OS for the server: Debian 12/13 or Ubuntu 22.04/24.04/26.04. Just 512 MB of RAM, 5 GB of disk space and 1 processor core are sufficient for the server. You will also need an IPv4 on the server and your own domain/subdomain ([How to set it up?](cf-settings-en.md)). Run as root on a newly installed system. It's necessary to update and reboot the system before running this script.
 
 To setup the server, run this command on it:
 
@@ -93,6 +93,6 @@ It is recommended to use Sing-Box app due to more complete routing settings, but
 [Sing-Box clients without GUI.](NoGUI-clients-en.md) Setup of pure Sing-Box core for Windows and Linux.
 
 > [!IMPORTANT]
-> When using Sing-Box on some devices, "stack": "system" in tun interface settings in client configs might not work. In such cases, it is recommended to replace it with "gvisor" by using option 4 in the settings menu (see above).
+> When using Sing-Box on some devices, `"stack": "system"` in tun interface settings in client configs might not work. In such cases, it is recommended to replace it with `"gvisor"` by using option 4 in the settings menu (see above).
 >
 > In Hiddify settings, specify DNS > Outbound domain strategy > IPv4 only. If some apps are not proxied when using Hiddify: Settings > Inbound > Service mode > VPN.
