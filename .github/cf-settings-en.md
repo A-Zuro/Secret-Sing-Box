@@ -18,16 +18,18 @@ Example of DNS records:
 
 ![dns](https://github.com/user-attachments/assets/bb128eaf-1930-4754-97aa-347cdf68e229)
 
-For the setup option with TLS termination on NGINX and WebSocket or HTTPUpgrade transport, you can enable proxying of both records (this may require to disable ECH).
+In the «Content» field of the A record, specify the IP of your server. Instead of example.com, specify your domain name. For the setup option with TLS termination on NGINX and WebSocket or HTTPUpgrade transport, you can enable proxying of both records (this may require to disable ECH).
 
 > [!IMPORTANT]
 > If you already have an A record for this domain created for other purposes, then also create an A record for subdomain:
 >
-> A | sub | 98.76.54.32
+> **Type** — A | **Name** — sub | **Content** — 98.76.54.32
 >
 > Instead of «sub», specify your subdomain and enter it in the script instead of your domain (e. g. sub.example.com).
 
 ### Getting Cloudflare API token
+
+This step can be skipped if you select the Standalone certificate validation method in the script.
 
 In your Cloudflare account, select Overview > Get your API token > Create Token > Edit zone DNS (Use template).
 

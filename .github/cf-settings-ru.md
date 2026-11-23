@@ -18,16 +18,18 @@
 
 ![dns-2](https://github.com/user-attachments/assets/bb128eaf-1930-4754-97aa-347cdf68e229)
 
-Для варианта настройки с терминированием TLS на NGINX и транспортом WebSocket или HTTPUpgrade можно включить проксирование обеих записей (требует [отключения ECH](https://habr.com/ru/articles/856602/)).
+В поле «Content» для А записи укажите IP вашего сервера. Вместо example.com укажите ваш домен. Для варианта настройки с терминированием TLS на NGINX и транспортом WebSocket или HTTPUpgrade можно включить проксирование обеих записей (требует [отключения ECH](https://habr.com/ru/articles/856602/)).
 
 > [!IMPORTANT]
 > Если уже есть А запись на этот домен, созданная для других целей, то нужно создать А запись на поддомен:
 >
-> A | sub | 98.76.54.32
+> **Type** — A | **Name** — sub | **Content** — 98.76.54.32
 >
 > Вместо «sub» придумайте свой поддомен, и в скрипте введите его вместо домена (например, sub.example.com).
 
 ### Получение API токена Cloudflare
+
+Этот шаг можно пропустить, если в скрипте выбрать метод валидации сертификатов Standalone.
 
 В аккаунте Cloudflare выберите Overview > Get your API token > Create Token > Edit zone DNS (Use template).
 
