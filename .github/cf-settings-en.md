@@ -23,7 +23,9 @@ In the «Content» field of the A record, specify the IP of your server. Instead
 > [!IMPORTANT]
 > If you already have an A record for this domain created for other purposes, then also create an A record for subdomain:
 >
-> **Type** — A | **Name** — sub | **Content** — 98.76.54.32
+> | Type     | Name     | Content     |
+> |----------|----------|-------------|
+> | A        | sub      | 98.76.54.32 |
 >
 > Instead of «sub», specify your subdomain and enter it in the script instead of your domain (e. g. sub.example.com).
 
