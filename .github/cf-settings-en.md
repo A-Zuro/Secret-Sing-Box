@@ -29,7 +29,7 @@ In the «Content» field of the A record, specify the IP of your server. Instead
 
 ### Getting Cloudflare API token
 
-This step can be skipped if you select the Standalone certificate validation method in the script.
+This step can be skipped if you select the Standalone certificate validation method in the script (not recommended).
 
 In your Cloudflare account, select Overview > Get your API token > Create Token > Edit zone DNS (Use template).
 

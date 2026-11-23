@@ -29,7 +29,7 @@
 
 ### Получение API токена Cloudflare
 
-Этот шаг можно пропустить, если в скрипте выбрать метод валидации сертификатов Standalone.
+Этот шаг можно пропустить, если в скрипте выбрать метод валидации сертификатов Standalone (не рекомендуется).
 
 В аккаунте Cloudflare выберите Overview > Get your API token > Create Token > Edit zone DNS (Use template).
 
